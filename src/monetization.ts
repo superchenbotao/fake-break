@@ -36,7 +36,7 @@ export const AD_CONFIG = {
   /** "simulated" = built-in house creative; "network" = real ad SDK slot. */
   provider: "simulated" as "simulated" | "network",
   /** Fill these when provider is "network" (see header comment). */
-  networkClientId: "",
+  networkClientId: "ca-pub-5803299374420176",
   networkSlotId: "",
   /** Rewarded ads must not be skippable — this is the watch duration. */
   adSeconds: 6,
