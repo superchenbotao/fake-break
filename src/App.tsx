@@ -28,7 +28,7 @@ type SmokeRing = {
   kind: "single" | "double" | "halo";
 };
 
-type View = "home" | "packs" | "unbox" | "ritual";
+type View = "home" | "packs" | "unbox" | "ritual" | "privacy" | "about";
 type LightMode = "match" | "lighter";
 
 const PACKS: Pack[] = [
@@ -262,7 +262,14 @@ export default function Home() {
       : savedState.paidUnlocks;
   });
 
-  const [view, setView] = useState<View>("home");
+  const [view, setView] = useState<View>(() => {
+    try {
+      const page = new URLSearchParams(window.location.search).get("page");
+      return page === "privacy" || page === "about" ? page : "home";
+    } catch {
+      return "home";
+    }
+  });
   const [unboxOpen, setUnboxOpen] = useState(false);
   const [lit, setLit] = useState(false);
   const [justLit, setJustLit] = useState(false);
@@ -748,6 +755,29 @@ export default function Home() {
     setView("unbox");
   };
 
+  // ---------- Legal pages (?page=privacy|about keeps real URLs for review) ----------
+
+  const openPage = (page: "privacy" | "about") => {
+    window.history.pushState(null, "", `?page=${page}`);
+    setView(page);
+    window.scrollTo(0, 0);
+  };
+
+  const closePage = () => {
+    window.history.pushState(null, "", window.location.pathname);
+    setView("home");
+    window.scrollTo(0, 0);
+  };
+
+  useEffect(() => {
+    const onPop = () => {
+      const page = new URLSearchParams(window.location.search).get("page");
+      setView(page === "privacy" || page === "about" ? page : "home");
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
   // ---------- Monetized unlocks ----------
 
   const isPackUnlocked = (pack: Pack) => {
@@ -1116,6 +1146,170 @@ export default function Home() {
               Real quit support ↗
             </a>
           </p>
+          <p className="homeFoot legalLinks">
+            <button type="button" onClick={() => openPage("privacy")}>Privacy</button>
+            {" · "}
+            <button type="button" onClick={() => openPage("about")}>About</button>
+            {" · "}
+            <a href="https://github.com/superchenbotao/fake-break" target="_blank" rel="noreferrer">
+              Contact
+            </a>
+          </p>
+        </div>
+      )}
+
+      {view === "privacy" && (
+        <div className="legalView">
+          <header className="packsHeader">
+            <button type="button" className="backButton" onClick={closePage}>
+              ‹ Back
+            </button>
+            <h1>Privacy Policy</h1>
+            <p>Last updated: August 16, 2026</p>
+          </header>
+
+          <section className="legalCard">
+            <h2>The short version</h2>
+            <p>
+              Fake Break stores everything on your own device, never uploads it, and
+              sets no tracking cookies. Your ritual is yours — we can’t see it, and
+              we don’t want to.
+            </p>
+          </section>
+
+          <section className="legalCard">
+            <h2>What stays on your device</h2>
+            <p>
+              Your fake-break count, streaks, pack unlocks, and settings live in your
+              browser’s localStorage. Clearing your browser data resets the app.
+              This data never leaves your device.
+            </p>
+          </section>
+
+          <section className="legalCard">
+            <h2>Microphone</h2>
+            <p>
+              If you enable “Mic puff”, your microphone’s loudness level is analyzed
+              locally in your browser to drive the ritual. Audio is never recorded,
+              stored, or transmitted. You can revoke the permission at any time in
+              your browser settings.
+            </p>
+          </section>
+
+          <section className="legalCard">
+            <h2>Sound and vibration</h2>
+            <p>
+              All audio is synthesized on-device with the Web Audio API. Haptics use
+              your device’s vibration motor. No media files are downloaded.
+            </p>
+          </section>
+
+          <section className="legalCard">
+            <h2>Advertising</h2>
+            <p>
+              Some packs unlock by watching a short sponsored break. We may serve ads
+              through third-party networks such as Google AdSense. These vendors may
+              use cookies or similar technologies to personalize ads based on your
+              visits to this and other sites. You can opt out of personalized ads at{" "}
+              <a href="https://adssettings.google.com/" target="_blank" rel="noreferrer">
+                Google Ads Settings ↗
+              </a>{" "}
+              and learn how Google uses data at{" "}
+              <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noreferrer">
+                Google’s partner-sites policy ↗
+              </a>
+              .
+            </p>
+          </section>
+
+          <section className="legalCard">
+            <h2>Sharing</h2>
+            <p>
+              The share button uses your device’s native share sheet (Web Share API)
+              or copies a link to your clipboard. We never see what you share or
+              with whom.
+            </p>
+          </section>
+
+          <section className="legalCard">
+            <h2>Contact</h2>
+            <p>
+              Questions about this policy? Open an issue on{" "}
+              <a href="https://github.com/superchenbotao/fake-break" target="_blank" rel="noreferrer">
+                our GitHub repository ↗
+              </a>
+              .
+            </p>
+          </section>
+        </div>
+      )}
+
+      {view === "about" && (
+        <div className="legalView">
+          <header className="packsHeader">
+            <button type="button" className="backButton" onClick={closePage}>
+              ‹ Back
+            </button>
+            <h1>About</h1>
+            <p>Why a fake cigarette, though?</p>
+          </header>
+
+          <section className="legalCard">
+            <h2>The idea</h2>
+            <p>
+              A craving is mostly theater: the walk outside, the flick, the slow
+              exhale, the two minutes where nobody can ask you for anything.
+              Fake Break keeps the theater and deletes the tobacco. You get the
+              full ritual — the pack, the foil, the ember, the smoke rings — with
+              zero nicotine, zero tar, and zero regret.
+            </p>
+          </section>
+
+          <section className="legalCard">
+            <h2>How it works</h2>
+            <p>
+              Each fake break is a small ceremony: unbox a pack, light the
+              (imaginary) cigarette, pull air through it, watch the ember breathe,
+              flick the ash, blow a ring. By the time the ceremony ends, the urge
+              has usually peaked and passed — most cravings crest within about
+              ninety seconds.
+            </p>
+          </section>
+
+          <section className="legalCard">
+            <h2>What it is not</h2>
+            <p>
+              Fake Break is a playful craving interrupter, not a medical product,
+              cessation program, or health advice. If you’re quitting for real,
+              you deserve real support:{" "}
+              <a href="https://smokefree.gov/" target="_blank" rel="noreferrer">
+                smokefree.gov ↗
+              </a>{" "}
+              is a good first stop.
+            </p>
+          </section>
+
+          <section className="legalCard">
+            <h2>How it’s funded</h2>
+            <p>
+              The site is free. Some packs unlock by sharing Fake Break with a
+              friend, some by watching a short sponsored break, and the fanciest
+              pack accepts a one-time supporter payment. That’s the whole business
+              model — no subscriptions, no data sales, nothing weird.
+            </p>
+          </section>
+
+          <section className="legalCard">
+            <h2>Made by</h2>
+            <p>
+              A small team that quit smoking and missed the lighter. Code, issues,
+              and compliments:{" "}
+              <a href="https://github.com/superchenbotao/fake-break" target="_blank" rel="noreferrer">
+                github.com/superchenbotao/fake-break ↗
+              </a>
+              .
+            </p>
+          </section>
         </div>
       )}
 
