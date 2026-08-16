@@ -425,12 +425,14 @@ button { color: inherit; }
 
 .ritualRail {
   position: absolute;
-  top: 50%;
-  right: 14px;
-  transform: translateY(-50%);
+  z-index: 3;
+  top: 146px;
+  bottom: 290px;
+  right: 12px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  justify-content: space-evenly;
+  gap: 10px;
 }
 .ritualRail button {
   width: 62px;
@@ -1554,4 +1556,22 @@ body {
   .packGrid { gap: 14px; }
   .packCard { min-height: 280px; }
   .packBox { width: min(320px, 74%); }
+}
+
+/* ============ SHORT-SCREEN RAIL FIT ============ */
+
+.ritualSide { z-index: 3; }
+
+@media (max-height: 820px) {
+  .ritualRail { top: 132px; bottom: 265px; gap: 8px; }
+  .ritualRail button i { width: 46px; height: 46px; font-size: 15px; }
+  .ritualRail button span { font-size: 7px; }
+}
+
+@media (max-height: 740px) {
+  .ritualRail { top: 122px; bottom: 245px; gap: 6px; }
+  .ritualRail button i { width: 42px; height: 42px; font-size: 14px; }
+  .ritualRail button span { display: none; }
+  .cigaretteStage { min-height: 300px; }
+  .cigarette { height: min(40svh, 340px); }
 }
