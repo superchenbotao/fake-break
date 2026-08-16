@@ -4,7 +4,7 @@ A playful, anti-smoking craving interrupter built with open-source
 [Vite](https://vite.dev/) and React. The site is entirely static and deploys to
 GitHub Pages directly from the versioned `docs/` build.
 
-Live site: <https://superchenbotao.github.io/fake-break/>
+Live site: <https://fakebreak.win> (mirror: <https://superchenbotao.github.io/fake-break/>)
 
 ## The ritual
 

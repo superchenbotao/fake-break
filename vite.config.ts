@@ -1,8 +1,7 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
-const repositoryName = "fake-break";
-const productionUrl = `https://superchenbotao.github.io/${repositoryName}`;
+const productionUrl = "https://fakebreak.win";
 
 export default defineConfig(({ command }) => {
   const isBuild = command === "build";
