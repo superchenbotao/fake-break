@@ -39,3 +39,4 @@ yarn-error.log*
 
 # local reference assets
 /.ref-images/
+.wb-*.json
