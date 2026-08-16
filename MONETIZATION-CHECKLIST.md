@@ -1,17 +1,18 @@
 # Fake Break 变现落地清单（内部操作文档）
 
 > 目标：让网站产生收益，且收益 100% 进我们自己的账户。
-> 现状：分享解锁已上线可用；广告解锁流程已上线（内置模拟广告位）。
+> 现状：双轨解锁已上线——看广告解锁 + $1 支持者通行证（一次付费全解锁）。
 > 本文档按阶段推进，每步标注【你做】/【我做】/【一起做】。
 
 ---
 
 ## 阶段 0 · 现在已经有的（无需操作）
 
-- ✅ 分享裂变解锁：Main Character / Paper Trail 两款烟盒，分享网站即可解锁
-- ✅ 广告解锁完整流程：Gaslight / Midnight Snack / Old Money，6 秒激励广告插页
+- ✅ 广告解锁完整流程：Main Character / Paper Trail / Gaslight / Midnight Snack / Old Money 五款烟盒，6 秒激励广告插页
+- ✅ 支持者通行证：每款广告烟盒都带 $1 付费选项，一次付费解锁全部烟盒（回跳 `?supporter=all` 自动解锁）
 - ✅ 广告接入点：`src/monetization.ts`，拿到真实广告 ID 后改两行即可切换
-- ✅ 流量即资产：分享解锁带来的每个访问者都是未来广告收入的基数
+- ✅ 自定义域名 + HTTPS：fakebreak.win 已上线
+- ✅ Privacy / About 页面：AdSense 审核硬性材料已就位
 
 ---
 
