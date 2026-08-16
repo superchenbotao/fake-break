@@ -1099,127 +1099,131 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="ritualRail">
-            <button
-              type="button"
-              className={soundOn ? "railOn" : ""}
-              onClick={() => {
-                if (soundOn) stopInhaleSound();
-                setSoundOn((current) => !current);
-              }}
-              aria-pressed={soundOn}
-            >
-              <i>{soundOn ? "🔔" : "🔕"}</i>
-              <span>{soundOn ? "Sound on" : "Muted"}</span>
-            </button>
-            <button
-              type="button"
-              className={micOn ? "railOn" : ""}
-              onClick={toggleMicrophone}
-              disabled={!lit || burn >= 95}
-              aria-pressed={micOn}
-            >
-              <i>🎙</i>
-              <span>{micOn ? `Mic ${micLevel}%` : "Mic puff"}</span>
-            </button>
-            <button
-              type="button"
-              className={ash >= 70 ? "ashReady" : ""}
-              onClick={flickAsh}
-              disabled={ash < 5}
-            >
-              <i
-                style={{
-                  background: `conic-gradient(color-mix(in srgb, var(--pack-glow) 75%, transparent) ${ashRounded}%, rgba(0,0,0,.34) ${ashRounded}%)`,
-                }}
-              >
-                ≋
-              </i>
-              <span>{ash >= 5 ? `Flick it ${ashRounded}%` : "Flick ash"}</span>
-            </button>
-            <button
-              type="button"
-              className={exhaling ? "railOn" : ""}
-              onPointerDown={beginRing}
-              onPointerUp={endRing}
-              onPointerCancel={endRing}
-              onPointerLeave={endRing}
-              disabled={puffs === 0}
-            >
-              <i>◎</i>
-              <span>{exhaling ? "Hold it…" : ringCount > 0 ? `Rings ×${ringCount}` : "Smoke rings"}</span>
-            </button>
-            <button type="button" onClick={shareResult} disabled={puffs === 0}>
-              <i>↗</i>
-              <span>{shared ? "Passed ✓" : "Pass it on"}</span>
-            </button>
-          </div>
-
-          <div className="cigaretteStage" aria-hidden="true">
-            <div className="halo" />
-            <div className="ringField">
-              {smokeRings.map((ring, index) => (
-                <i
-                  key={ring.id}
-                  className={`smokeRing ${ring.kind}`}
-                  style={{ "--ring-index": index } as CSSProperties}
-                >
-                  <b />
-                </i>
-              ))}
-            </div>
-            {exhaling && <div className="puffCloud" />}
-            <div className="smokeBits">
-              {Array.from({ length: 10 }, (_, index) => (
-                <i key={index} />
-              ))}
-            </div>
-            {flicking && (
-              <div className="ashBurst">
-                {Array.from({ length: 7 }, (_, index) => (
+          <div className="stageRow">
+            <div className="cigaretteStage" aria-hidden="true">
+              <div className="halo" />
+              <div className="ringField">
+                {smokeRings.map((ring, index) => (
+                  <i
+                    key={ring.id}
+                    className={`smokeRing ${ring.kind}`}
+                    style={{ "--ring-index": index } as CSSProperties}
+                  >
+                    <b />
+                  </i>
+                ))}
+              </div>
+              {exhaling && <div className="puffCloud" />}
+              <div className="smokeBits">
+                {Array.from({ length: 10 }, (_, index) => (
                   <i key={index} />
                 ))}
               </div>
-            )}
-            <div className="ashtray" />
-            <button
-              type="button"
-              className="cigarette"
-              onClick={() => {
-                if (!litRef.current) {
-                  lightCigarette();
-                } else {
-                  flickAsh();
+              {flicking && (
+                <div className="ashBurst">
+                  {Array.from({ length: 7 }, (_, index) => (
+                    <i key={index} />
+                  ))}
+                </div>
+              )}
+              <div className="ashtray" />
+              <button
+                type="button"
+                className="cigarette"
+                onClick={() => {
+                  if (!litRef.current) {
+                    lightCigarette();
+                  } else {
+                    flickAsh();
+                  }
+                }}
+                onPointerDown={handleCigDown}
+                onPointerUp={handleCigUp}
+                onPointerCancel={() => {
+                  cigPointer.current = null;
+                }}
+                disabled={burn >= 95}
+                aria-label={
+                  lit
+                    ? ash >= 5
+                      ? "Tap or swipe down on the cigarette to flick the ash"
+                      : "Cigarette is lit"
+                    : "Tap the tip to light"
                 }
-              }}
-              onPointerDown={handleCigDown}
-              onPointerUp={handleCigUp}
-              onPointerCancel={() => {
-                cigPointer.current = null;
-              }}
-              disabled={burn >= 95}
-              aria-label={
-                lit
-                  ? ash >= 5
-                    ? "Tap or swipe down on the cigarette to flick the ash"
-                    : "Cigarette is lit"
-                  : "Tap the tip to light"
-              }
-              style={
-                {
-                  "--burn-offset": `${burn * 1.6}px`,
-                  "--ash-height": `${Math.min(58, 8 + ash * 0.48)}px`,
-                  "--ash-opacity": ash >= 5 ? 1 : 0,
-                  "--ash-tilt": ash >= 70 ? "4.5deg" : "0deg",
-                } as CSSProperties
-              }
-            >
-              <span className="flame" />
-              <span className="ashCap"><i /></span>
-              <span className="ember" />
-              <span className="paper"><b>FAKE</b></span>
-              <span className="filter" />
-            </button>
+                style={
+                  {
+                    "--burn-offset": `${burn * 1.6}px`,
+                    "--ash-height": `${Math.min(58, 8 + ash * 0.48)}px`,
+                    "--ash-opacity": ash >= 5 ? 1 : 0,
+                    "--ash-tilt": ash >= 70 ? "4.5deg" : "0deg",
+                  } as CSSProperties
+                }
+              >
+                <span className="flame" />
+                <span className="ashCap"><i /></span>
+                <span className="ember" />
+                <span className="paper"><b>FAKE</b></span>
+                <span className="filter" />
+              </button>
+            </div>
+
+            <div className="ritualRail">
+              <button
+                type="button"
+                className={soundOn ? "railOn" : ""}
+                onClick={() => {
+                  if (soundOn) stopInhaleSound();
+                  setSoundOn((current) => !current);
+                }}
+                aria-pressed={soundOn}
+              >
+                <i>{soundOn ? "🔔" : "🔕"}</i>
+                <span>{soundOn ? "Sound on" : "Muted"}</span>
+              </button>
+              <button
+                type="button"
+                className={micOn ? "railOn" : ""}
+                onClick={toggleMicrophone}
+                disabled={!lit || burn >= 95}
+                aria-pressed={micOn}
+              >
+                <i>🎙</i>
+                <span>{micOn ? `Mic ${micLevel}%` : "Mic puff"}</span>
+              </button>
+              <button
+                type="button"
+                className={ash >= 70 ? "ashReady" : ""}
+                onClick={flickAsh}
+                disabled={ash < 5}
+              >
+                <i
+                  style={{
+                    background: `conic-gradient(color-mix(in srgb, var(--pack-glow) 75%, transparent) ${ashRounded}%, rgba(0,0,0,.34) ${ashRounded}%)`,
+                  }}
+                >
+                  ≋
+                </i>
+                <span>{ash >= 5 ? `Flick it ${ashRounded}%` : "Flick ash"}</span>
+              </button>
+              <button
+                type="button"
+                className={exhaling ? "railOn" : ""}
+                onPointerDown={(event) => {
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                  beginRing();
+                }}
+                onPointerUp={endRing}
+                onPointerCancel={endRing}
+                disabled={puffs === 0}
+              >
+                <i>◎</i>
+                <span>{exhaling ? "Hold it…" : ringCount > 0 ? `Rings ×${ringCount}` : "Smoke rings"}</span>
+              </button>
+              <button type="button" onClick={shareResult} disabled={puffs === 0}>
+                <i>↗</i>
+                <span>{shared ? "Passed ✓" : "Pass it on"}</span>
+              </button>
+            </div>
           </div>
 
           <div className="ritualBottom">
@@ -1239,7 +1243,8 @@ export default function Home() {
             <button
               className="startButton"
               type="button"
-              onPointerDown={() => {
+              onPointerDown={(event) => {
+                event.currentTarget.setPointerCapture(event.pointerId);
                 if (!litRef.current && burnRef.current < 95) {
                   lightCigarette();
                   return;
@@ -1248,7 +1253,6 @@ export default function Home() {
               }}
               onPointerUp={() => endInhale()}
               onPointerCancel={() => endInhale()}
-              onPointerLeave={() => endInhale()}
               onKeyDown={(event) => {
                 if ((event.key === " " || event.key === "Enter") && !event.repeat) {
                   if (!litRef.current && burnRef.current < 95) lightCigarette();
