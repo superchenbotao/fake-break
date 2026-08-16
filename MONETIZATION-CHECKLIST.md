@@ -91,12 +91,17 @@
 - 第三方激励网络（Monetag / Adsterra 等）门槛低、周结，但广告质量较差，
   建议作为 AdSense 被拒后的备选
 
-### 路线 C（强烈建议同步做）：直接收款，零审核
+### 路线 C（已内置，当天可收款）：直接付款，零审核
 
-- 【你做】注册 **Ko-fi** 或 **Stripe Payment Link**（5 分钟，免费）
-- 【我做】给 Old Money 烟盒加第三个解锁选项："Supporter unlock · $1"，
-  付款链接直达你的账户——这是到账最快、分成最高（~97%）的变现方式
-- 吸烟者省下的钱 vs 1 美元的支持定价，转化率通常高于广告点击
+- ✅【已完成】Old Money 烟盒弹层已带金色 "Supporter unlock · $1" 按钮，
+  与看广告并列（"or skip the line"）
+- ✅【已完成】支付回跳自解锁：Stripe 付款成功跳回 `/?supporter=old-money`
+  即自动解锁 + 庆祝提示；localStorage 永久记住支持者身份
+- 【你做】注册 **Ko-fi** 或创建 **Stripe Payment Link**（5 分钟，$1 一次性付款）
+  把链接发我（或自己填进 `src/monetization.ts` 的 `SUPPORT_CONFIG.paymentUrl`）
+- 【你做】仅 Stripe：把 Payment Link 的 after-payment 跳转设为
+  `https://你的域名/?supporter=old-money`
+- 分成 ~97%，直达你的账户——到账最快、无审核的变现方式
 
 ---
 

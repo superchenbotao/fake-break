@@ -41,6 +41,33 @@ export const AD_CONFIG = {
   adSeconds: 6,
 };
 
+/**
+ * Route C — direct supporter payment (the fastest revenue path, zero approval).
+ *
+ * Setup, five minutes, no review:
+ *   1. Register Ko-fi (ko-fi.com) or create a Stripe Payment Link
+ *      (dashboard.stripe.com → Payment Links → $1, one-time).
+ *   2. Paste the URL into paymentUrl below. Done — the "Supporter unlock"
+ *      button on Old Money goes straight to your checkout.
+ *   3. Stripe only: set the Payment Link's "after payment" redirect to
+ *      https://YOUR-DOMAIN/?supporter=old-money — returning visitors land back
+ *      here and the pack unlocks itself. (Ko-fi has no redirect; supporters
+ *      can also just tap the link again, the URL works standalone.)
+ *
+ * The money goes directly to your Ko-fi/Stripe balance (~97% after fees).
+ * The success URL is honor-system shareable — acceptable for a $1 playful
+ * unlock; real entitlement checks would need a backend webhook.
+ */
+export const SUPPORT_CONFIG = {
+  /** Paste your Ko-fi page or Stripe Payment Link here, e.g. "https://ko-fi.com/yourname". */
+  paymentUrl: "",
+  price: "$1",
+  packId: "old-money",
+  /** Query string the payment provider redirects back to after checkout. */
+  successParam: "supporter",
+  successValue: "old-money",
+};
+
 export type HouseAd = {
   brand: string;
   tagline: string;

@@ -7,7 +7,7 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { AD_CONFIG, HOUSE_ADS, type UnlockRule } from "./monetization";
+import { AD_CONFIG, HOUSE_ADS, SUPPORT_CONFIG, type UnlockRule } from "./monetization";
 
 type Pack = {
   id: string;
@@ -17,6 +17,8 @@ type Pack = {
   line: string;
   price: string;
   rule: UnlockRule;
+  /** Route C: this pack also accepts a direct supporter payment. */
+  paid?: boolean;
   color: string;
   glow: string;
 };
@@ -115,6 +117,7 @@ const PACKS: Pack[] = [
     line: "Smells like a yacht you’ve never been on.",
     price: "$25",
     rule: { kind: "ad", count: 2 },
+    paid: true,
     color: "#274435",
     glow: "#8fd4a8",
   },
@@ -177,6 +180,7 @@ type SavedState = {
   selectedPackId: string;
   packCounts: Record<string, number>;
   adProgress: Record<string, number>;
+  paidUnlocks: string[];
 };
 
 const FALLBACK_STATE: SavedState = {
@@ -191,6 +195,7 @@ const FALLBACK_STATE: SavedState = {
   selectedPackId: PACKS[0].id,
   packCounts: {},
   adProgress: {},
+  paidUnlocks: [],
 };
 
 function loadSavedState(): SavedState {
@@ -208,6 +213,18 @@ function yesterdayKey() {
   const date = new Date();
   date.setDate(date.getDate() - 1);
   return date.toISOString().slice(0, 10);
+}
+
+/** Route C: did we just land back from the supporter checkout? */
+function paymentReturnPack(): string | null {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(SUPPORT_CONFIG.successParam) === SUPPORT_CONFIG.successValue
+      ? SUPPORT_CONFIG.packId
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 function dayOfYear(date: Date) {
@@ -238,6 +255,12 @@ export default function Home() {
   const [selectedPackId, setSelectedPackId] = useState(savedState.selectedPackId);
   const [packCounts, setPackCounts] = useState(savedState.packCounts);
   const [adProgress, setAdProgress] = useState(savedState.adProgress);
+  const [paidUnlocks] = useState(() => {
+    const hit = paymentReturnPack();
+    return hit && !savedState.paidUnlocks.includes(hit)
+      ? [...savedState.paidUnlocks, hit]
+      : savedState.paidUnlocks;
+  });
 
   const [view, setView] = useState<View>("home");
   const [unboxOpen, setUnboxOpen] = useState(false);
@@ -265,8 +288,9 @@ export default function Home() {
   const [unlockSheetId, setUnlockSheetId] = useState<string | null>(null);
   const [adForId, setAdForId] = useState<string | null>(null);
   const [adLeft, setAdLeft] = useState(AD_CONFIG.adSeconds);
-  const [toast, setToast] = useState("");
-  const toastTimeout = useRef<number | null>(null);
+  const [toast, setToast] = useState(() =>
+    paymentReturnPack() ? "Welcome, supporter — “Old Money” unlocked ★" : "",
+  );
   const [now, setNow] = useState(() => new Date());
 
   const inhaleFrame = useRef<number | null>(null);
@@ -312,12 +336,13 @@ export default function Home() {
           selectedPackId,
           packCounts,
           adProgress,
+          paidUnlocks,
         }),
       );
     } catch {
       // The ritual still works when storage is unavailable.
     }
-  }, [sessions, streak, lastDate, todayCount, totalPuffs, totalFlicks, totalRings, shares, selectedPackId, packCounts, adProgress, today]);
+  }, [sessions, streak, lastDate, todayCount, totalPuffs, totalFlicks, totalRings, shares, selectedPackId, packCounts, adProgress, paidUnlocks, today]);
 
   useEffect(() => {
     litRef.current = lit;
@@ -726,6 +751,7 @@ export default function Home() {
   // ---------- Monetized unlocks ----------
 
   const isPackUnlocked = (pack: Pack) => {
+    if (paidUnlocks.includes(pack.id)) return true;
     if (pack.rule.kind === "sessions") return sessions >= pack.rule.count;
     if (pack.rule.kind === "share") return shares >= pack.rule.count;
     return (adProgress[pack.id] ?? 0) >= pack.rule.count;
@@ -742,14 +768,18 @@ export default function Home() {
     const left = pack.rule.count - unlockProgress(pack);
     if (pack.rule.kind === "sessions") return `🔒 ${left} to go`;
     if (pack.rule.kind === "share") return `🔗 Share ${left > 1 ? `×${left}` : "to unlock"}`;
+    if (pack.paid) return `▶ Ad ×${left} · or ${SUPPORT_CONFIG.price}`;
     return `▶ Ad ${left > 1 ? `×${left}` : "to unlock"}`;
   };
 
-  const showToast = (message: string) => {
-    setToast(message);
-    if (toastTimeout.current) window.clearTimeout(toastTimeout.current);
-    toastTimeout.current = window.setTimeout(() => setToast(""), 2600);
-  };
+  const showToast = (message: string) => setToast(message);
+
+  // Toasts dismiss themselves.
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(""), 2600);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   const shareToUnlock = async (pack: Pack) => {
     const text = "I quit smoking with an imaginary cigarette. Fake Break is unhinged and weirdly effective — try it.";
@@ -767,11 +797,31 @@ export default function Home() {
         setUnlockSheetId(null);
         showToast(`“${pack.name}” unlocked!`);
         startUnbox(pack.id);
+      } else if (pack.rule.kind === "share") {
+        showToast(`Shared! ${pack.rule.count - next} more to unlock “${pack.name}”`);
       }
     } catch {
       // A cancelled share grants nothing.
     }
   };
+
+  const openSupporterCheckout = () => {
+    if (!SUPPORT_CONFIG.paymentUrl) {
+      showToast("Checkout link goes here — one line in monetization.ts");
+      return;
+    }
+    window.open(SUPPORT_CONFIG.paymentUrl, "_blank", "noopener");
+  };
+
+  // Route C return fanfare: chime + scrub the query string. The unlock itself
+  // happened in the paidUnlocks initializer above.
+  useEffect(() => {
+    if (!paymentReturnPack()) return;
+    playTone(660, 0.18, 0.05, 990);
+    window.setTimeout(() => playTone(880, 0.22, 0.045, 1320), 140);
+    window.history.replaceState(null, "", window.location.pathname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const openAdBreak = (pack: Pack) => {
     setAdForId(pack.id);
@@ -1547,10 +1597,16 @@ export default function Home() {
                 <>
                   <p className="sheetBody">
                     No money, no grind — <strong>share Fake Break</strong> with a friend and this pack opens.
-                    {left > 1 ? ` (${left} shares to go)` : ""}
                   </p>
+                  {pack.rule.count > 1 && (
+                    <div className="pips" aria-label={`${unlockProgress(pack)} of ${pack.rule.count} shares done`}>
+                      {Array.from({ length: pack.rule.count }, (_, index) => (
+                        <i key={index} className={index < unlockProgress(pack) ? "done" : ""} />
+                      ))}
+                    </div>
+                  )}
                   <button type="button" className="sheetAction" onClick={() => shareToUnlock(pack)}>
-                    🔗 Share the site
+                    🔗 Share the site{left > 1 ? ` · ${unlockProgress(pack)}/${pack.rule.count}` : ""}
                   </button>
                 </>
               )}
@@ -1559,10 +1615,26 @@ export default function Home() {
                 <>
                   <p className="sheetBody">
                     Watch a short sponsored break and this pack opens — the ad keeps Fake Break free.
-                    {left > 1 ? ` (${left} ads to go)` : ""}
                   </p>
+                  {pack.rule.count > 1 && (
+                    <div className="pips" aria-label={`${unlockProgress(pack)} of ${pack.rule.count} ads watched`}>
+                      {Array.from({ length: pack.rule.count }, (_, index) => (
+                        <i key={index} className={index < unlockProgress(pack) ? "done" : ""} />
+                      ))}
+                    </div>
+                  )}
                   <button type="button" className="sheetAction" onClick={() => openAdBreak(pack)}>
-                    ▶ Watch ad · {AD_CONFIG.adSeconds}s
+                    ▶ Watch ad · {AD_CONFIG.adSeconds}s{left > 1 ? ` (${unlockProgress(pack)}/${pack.rule.count})` : ""}
+                  </button>
+                </>
+              )}
+
+              {pack.paid && (
+                <>
+                  <div className="sheetDivider"><span>or skip the line</span></div>
+                  <button type="button" className="supporterAction" onClick={openSupporterCheckout}>
+                    ★ Supporter unlock · {SUPPORT_CONFIG.price}
+                    <small>One-time · keeps the lights on · instant</small>
                   </button>
                 </>
               )}
@@ -1601,7 +1673,12 @@ export default function Home() {
                 Claim “{pack.name}” ✓
               </button>
             ) : (
-              <p className="adHint">Your reward unlocks when the break ends…</p>
+              <>
+                <p className="adHint">Your reward unlocks when the break ends…</p>
+                <button type="button" className="adCancel" onClick={() => setAdForId(null)}>
+                  Cancel · no reward
+                </button>
+              </>
             )}
           </div>
         );
