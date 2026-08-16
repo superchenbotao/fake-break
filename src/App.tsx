@@ -7,6 +7,7 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { AD_CONFIG, HOUSE_ADS, type UnlockRule } from "./monetization";
 
 type Pack = {
   id: string;
@@ -15,7 +16,7 @@ type Pack = {
   flavor: string;
   line: string;
   price: string;
-  unlock: number;
+  rule: UnlockRule;
   color: string;
   glow: string;
 };
@@ -36,7 +37,7 @@ const PACKS: Pack[] = [
     flavor: "Icy finish · tastes like nothing, elegantly",
     line: "For cravings that think they’re cinematic.",
     price: "$4",
-    unlock: 0,
+    rule: { kind: "sessions", count: 0 },
     color: "#33507e",
     glow: "#8ab8ff",
   },
@@ -47,7 +48,7 @@ const PACKS: Pack[] = [
     flavor: "Toasted honey · completely imaginary",
     line: "Looks expensive. Costs you zero lungs.",
     price: "$6",
-    unlock: 2,
+    rule: { kind: "sessions", count: 2 },
     color: "#a5741a",
     glow: "#ffd95e",
   },
@@ -58,7 +59,7 @@ const PACKS: Pack[] = [
     flavor: "Rain on concrete · suspiciously calming",
     line: "The craving was a notification. Dismissed.",
     price: "$5",
-    unlock: 4,
+    rule: { kind: "sessions", count: 4 },
     color: "#4e5b51",
     glow: "#b7d2bd",
   },
@@ -69,7 +70,7 @@ const PACKS: Pack[] = [
     flavor: "Velvet and thunder · none of it real",
     line: "All the entrance. None of the ashtray.",
     price: "$12",
-    unlock: 7,
+    rule: { kind: "share", count: 1 },
     color: "#5e2a68",
     glow: "#db81ee",
   },
@@ -80,7 +81,7 @@ const PACKS: Pack[] = [
     flavor: "Fresh printer toner · faint triumph",
     line: "Filed under: things you didn’t smoke.",
     price: "$7",
-    unlock: 10,
+    rule: { kind: "share", count: 2 },
     color: "#43506b",
     glow: "#a9c1e8",
   },
@@ -91,7 +92,7 @@ const PACKS: Pack[] = [
     flavor: "Toasted marshmallow · trust issues",
     line: "Tastes like you imagined the craving. You did.",
     price: "$9",
-    unlock: 14,
+    rule: { kind: "ad", count: 1 },
     color: "#7e3b1f",
     glow: "#ffab7a",
   },
@@ -102,7 +103,7 @@ const PACKS: Pack[] = [
     flavor: "Vanilla static · zero calories",
     line: "The fridge was never the answer either.",
     price: "$8",
-    unlock: 20,
+    rule: { kind: "ad", count: 1 },
     color: "#3a3f7a",
     glow: "#9aa4ff",
   },
@@ -113,7 +114,7 @@ const PACKS: Pack[] = [
     flavor: "Mahogany library · inherited confidence",
     line: "Smells like a yacht you’ve never been on.",
     price: "$25",
-    unlock: 30,
+    rule: { kind: "ad", count: 2 },
     color: "#274435",
     glow: "#8fd4a8",
   },
@@ -175,6 +176,7 @@ type SavedState = {
   shares: number;
   selectedPackId: string;
   packCounts: Record<string, number>;
+  adProgress: Record<string, number>;
 };
 
 const FALLBACK_STATE: SavedState = {
@@ -188,6 +190,7 @@ const FALLBACK_STATE: SavedState = {
   shares: 0,
   selectedPackId: PACKS[0].id,
   packCounts: {},
+  adProgress: {},
 };
 
 function loadSavedState(): SavedState {
@@ -234,6 +237,7 @@ export default function Home() {
   const [shares, setShares] = useState(savedState.shares);
   const [selectedPackId, setSelectedPackId] = useState(savedState.selectedPackId);
   const [packCounts, setPackCounts] = useState(savedState.packCounts);
+  const [adProgress, setAdProgress] = useState(savedState.adProgress);
 
   const [view, setView] = useState<View>("home");
   const [unboxOpen, setUnboxOpen] = useState(false);
@@ -258,6 +262,11 @@ export default function Home() {
   const [sessionSeconds, setSessionSeconds] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [shared, setShared] = useState(false);
+  const [unlockSheetId, setUnlockSheetId] = useState<string | null>(null);
+  const [adForId, setAdForId] = useState<string | null>(null);
+  const [adLeft, setAdLeft] = useState(AD_CONFIG.adSeconds);
+  const [toast, setToast] = useState("");
+  const toastTimeout = useRef<number | null>(null);
   const [now, setNow] = useState(() => new Date());
 
   const inhaleFrame = useRef<number | null>(null);
@@ -302,12 +311,13 @@ export default function Home() {
           shares,
           selectedPackId,
           packCounts,
+          adProgress,
         }),
       );
     } catch {
       // The ritual still works when storage is unavailable.
     }
-  }, [sessions, streak, lastDate, todayCount, totalPuffs, totalFlicks, totalRings, shares, selectedPackId, packCounts, today]);
+  }, [sessions, streak, lastDate, todayCount, totalPuffs, totalFlicks, totalRings, shares, selectedPackId, packCounts, adProgress, today]);
 
   useEffect(() => {
     litRef.current = lit;
@@ -713,6 +723,99 @@ export default function Home() {
     setView("unbox");
   };
 
+  // ---------- Monetized unlocks ----------
+
+  const isPackUnlocked = (pack: Pack) => {
+    if (pack.rule.kind === "sessions") return sessions >= pack.rule.count;
+    if (pack.rule.kind === "share") return shares >= pack.rule.count;
+    return (adProgress[pack.id] ?? 0) >= pack.rule.count;
+  };
+
+  /** Progress toward a locked pack, for labels and meters. */
+  const unlockProgress = (pack: Pack) => {
+    if (pack.rule.kind === "sessions") return Math.min(sessions, pack.rule.count);
+    if (pack.rule.kind === "share") return Math.min(shares, pack.rule.count);
+    return Math.min(adProgress[pack.id] ?? 0, pack.rule.count);
+  };
+
+  const lockChip = (pack: Pack) => {
+    const left = pack.rule.count - unlockProgress(pack);
+    if (pack.rule.kind === "sessions") return `🔒 ${left} to go`;
+    if (pack.rule.kind === "share") return `🔗 Share ${left > 1 ? `×${left}` : "to unlock"}`;
+    return `▶ Ad ${left > 1 ? `×${left}` : "to unlock"}`;
+  };
+
+  const showToast = (message: string) => {
+    setToast(message);
+    if (toastTimeout.current) window.clearTimeout(toastTimeout.current);
+    toastTimeout.current = window.setTimeout(() => setToast(""), 2600);
+  };
+
+  const shareToUnlock = async (pack: Pack) => {
+    const text = "I quit smoking with an imaginary cigarette. Fake Break is unhinged and weirdly effective — try it.";
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Fake Break", text, url: location.href });
+      } else {
+        await navigator.clipboard.writeText(`${text} ${location.href}`);
+        showToast("Link copied — send it to a friend ✨");
+      }
+      const next = shares + 1;
+      setShares(next);
+      playTone(520, 0.14, 0.04, 760);
+      if (pack.rule.kind === "share" && next >= pack.rule.count) {
+        setUnlockSheetId(null);
+        showToast(`“${pack.name}” unlocked!`);
+        startUnbox(pack.id);
+      }
+    } catch {
+      // A cancelled share grants nothing.
+    }
+  };
+
+  const openAdBreak = (pack: Pack) => {
+    setAdForId(pack.id);
+    setAdLeft(AD_CONFIG.adSeconds);
+  };
+
+  // Rewarded-ad countdown. Real networks replace this timer with their SDK
+  // reward callback — see src/monetization.ts.
+  useEffect(() => {
+    if (!adForId || adLeft <= 0) return;
+    const timer = window.setTimeout(() => {
+      const nextLeft = adLeft - 1;
+      setAdLeft(nextLeft);
+      if (nextLeft <= 0) playTone(660, 0.18, 0.045, 990);
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [adForId, adLeft, playTone]);
+
+  const claimAdReward = () => {
+    if (!adForId || adLeft > 0) return;
+    const pack = PACKS.find((candidate) => candidate.id === adForId);
+    setAdForId(null);
+    if (!pack || pack.rule.kind !== "ad") return;
+    const watched = (adProgress[pack.id] ?? 0) + 1;
+    setAdProgress((current) => ({ ...current, [pack.id]: watched }));
+    if (watched >= pack.rule.count) {
+      setUnlockSheetId(null);
+      showToast(`“${pack.name}” unlocked!`);
+      startUnbox(pack.id);
+    } else {
+      showToast(`${pack.rule.count - watched} more ad to unlock “${pack.name}”`);
+    }
+  };
+
+  // Escape dismisses the unlock sheet.
+  useEffect(() => {
+    if (!unlockSheetId) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setUnlockSheetId(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [unlockSheetId]);
+
   const tearFoil = () => {
     if (unboxOpen) return;
     setUnboxOpen(true);
@@ -772,8 +875,8 @@ export default function Home() {
   const temperatureF = 58 + ((dayOfYear(now) * 7) % 28);
   const timeLabel = `${periodOfDay(now.getHours())} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")} · ${wind} · ${temperatureF}°F`;
 
-  const nextUnlocks = PACKS.filter((pack) => sessions < pack.unlock)
-    .sort((a, b) => a.unlock - b.unlock)
+  const nextUnlocks = PACKS.filter((pack) => pack.rule.kind === "sessions" && sessions < pack.rule.count)
+    .sort((a, b) => (a.rule.kind === "sessions" ? a.rule.count : 0) - (b.rule.kind === "sessions" ? b.rule.count : 0))
     .slice(0, 2);
 
   const badges = [
@@ -873,10 +976,10 @@ export default function Home() {
                 <div className="unlockRow" key={pack.id}>
                   <span className="unlockDot" style={{ background: pack.glow }} />
                   <span className="unlockText">
-                    <strong>{pack.unlock - sessions}</strong> more fake {pack.unlock - sessions === 1 ? "break" : "breaks"} to unlock “{pack.name}”
+                    <strong>{pack.rule.count - sessions}</strong> more fake {pack.rule.count - sessions === 1 ? "break" : "breaks"} to unlock “{pack.name}”
                   </span>
                   <span className="unlockBar">
-                    <i style={{ width: `${Math.min(100, (sessions / pack.unlock) * 100)}%` }} />
+                    <i style={{ width: `${Math.min(100, (sessions / pack.rule.count) * 100)}%` }} />
                   </span>
                 </div>
               ))}
@@ -978,27 +1081,28 @@ export default function Home() {
 
           <div className="packGrid">
             {PACKS.map((pack) => {
-              const unlocked = sessions >= pack.unlock;
+              const unlocked = isPackUnlocked(pack);
               const selected = selectedPackId === pack.id;
               const remaining = packCounts[pack.id] ?? PACK_SIZE;
+              const isFree = pack.rule.kind === "sessions" && pack.rule.count === 0;
               return (
                 <button
                   type="button"
                   key={pack.id}
-                  className={`packCard ${selected ? "selected" : ""} ${unlocked ? "" : "locked"}`}
+                  className={`packCard ${selected ? "selected" : ""} ${unlocked ? "" : "locked"} lock-${pack.rule.kind}`}
                   style={{ "--card": pack.color, "--card-glow": pack.glow } as CSSProperties}
-                  onClick={() => unlocked && startUnbox(pack.id)}
+                  onClick={() => (unlocked ? startUnbox(pack.id) : setUnlockSheetId(pack.id))}
                   aria-pressed={selected}
                   aria-label={
                     unlocked
                       ? `Open ${pack.name}, ${remaining} left`
-                      : `${pack.name}, unlock after ${pack.unlock - sessions} more fake breaks`
+                      : `${pack.name}, locked — ${lockChip(pack)}`
                   }
                 >
-                  <span className="packPrice">
-                    {unlocked || pack.unlock === 0 ? pack.price : `🔒 ${pack.unlock - sessions} to go`}
+                  <span className={`packPrice ${unlocked || isFree ? "" : "lockChip"}`}>
+                    {unlocked || isFree ? pack.price : lockChip(pack)}
                   </span>
-                  {pack.unlock === 0 && <span className="packFree">First pack free</span>}
+                  {isFree && <span className="packFree">First pack free</span>}
                   <span className="packDisc"><i /></span>
                   <strong>{pack.name}</strong>
                   <span className="packLatin">{pack.mood}</span>
@@ -1408,6 +1512,102 @@ export default function Home() {
           </section>
         </div>
       )}
+
+      {/* ---- unlock sheet: share-gated and ad-gated packs ---- */}
+      {unlockSheetId && (() => {
+        const pack = PACKS.find((candidate) => candidate.id === unlockSheetId);
+        if (!pack) return null;
+        const left = pack.rule.count - unlockProgress(pack);
+        return (
+          <div className="sheetOverlay" role="dialog" aria-modal="true" aria-label={`${pack.name} is locked`}>
+            <div
+              className="unlockSheet"
+              style={{ "--card": pack.color, "--card-glow": pack.glow } as CSSProperties}
+            >
+              <button type="button" className="sheetClose" aria-label="Close" onClick={() => setUnlockSheetId(null)}>
+                ×
+              </button>
+              <span className="sheetDisc" />
+              <p className="sheetKicker">Locked pack</p>
+              <h2>{pack.name}</h2>
+              <p className="sheetLine">“{pack.line}”</p>
+
+              {pack.rule.kind === "sessions" && (
+                <>
+                  <p className="sheetBody">
+                    This one is earned the slow way — <strong>{left}</strong> more fake {left === 1 ? "break" : "breaks"} and it’s yours.
+                  </p>
+                  <button type="button" className="sheetAction" onClick={() => setUnlockSheetId(null)}>
+                    Keep going
+                  </button>
+                </>
+              )}
+
+              {pack.rule.kind === "share" && (
+                <>
+                  <p className="sheetBody">
+                    No money, no grind — <strong>share Fake Break</strong> with a friend and this pack opens.
+                    {left > 1 ? ` (${left} shares to go)` : ""}
+                  </p>
+                  <button type="button" className="sheetAction" onClick={() => shareToUnlock(pack)}>
+                    🔗 Share the site
+                  </button>
+                </>
+              )}
+
+              {pack.rule.kind === "ad" && (
+                <>
+                  <p className="sheetBody">
+                    Watch a short sponsored break and this pack opens — the ad keeps Fake Break free.
+                    {left > 1 ? ` (${left} ads to go)` : ""}
+                  </p>
+                  <button type="button" className="sheetAction" onClick={() => openAdBreak(pack)}>
+                    ▶ Watch ad · {AD_CONFIG.adSeconds}s
+                  </button>
+                </>
+              )}
+
+              <button type="button" className="sheetDismiss" onClick={() => setUnlockSheetId(null)}>
+                Not now
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ---- rewarded ad break (simulated creative until a network is connected) ---- */}
+      {adForId && (() => {
+        const pack = PACKS.find((candidate) => candidate.id === adForId);
+        const houseAd = HOUSE_ADS[(adProgress[adForId] ?? 0) % HOUSE_ADS.length];
+        if (!pack) return null;
+        const done = adLeft <= 0;
+        return (
+          <div className="adBreak" role="dialog" aria-modal="true" aria-label="Sponsored break">
+            <div className="adTag">Ad · {done ? "reward ready" : `reward in ${adLeft}s`}</div>
+            <div
+              className="adCreative"
+              style={{ "--ad-accent": houseAd.accent, "--ad-glow": houseAd.glow } as CSSProperties}
+            >
+              <span className="adBrandMark" />
+              <strong>{houseAd.brand}</strong>
+              <p>{houseAd.tagline}</p>
+              <span className="adCta">{houseAd.cta}</span>
+            </div>
+            <div className="adProgress">
+              <i style={{ width: `${((AD_CONFIG.adSeconds - adLeft) / AD_CONFIG.adSeconds) * 100}%` }} />
+            </div>
+            {done ? (
+              <button type="button" className="adClaim" onClick={claimAdReward}>
+                Claim “{pack.name}” ✓
+              </button>
+            ) : (
+              <p className="adHint">Your reward unlocks when the break ends…</p>
+            )}
+          </div>
+        );
+      })()}
+
+      {toast && <div className="toast">{toast}</div>}
     </main>
   );
 }
