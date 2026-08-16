@@ -266,6 +266,8 @@ export default function Home() {
   const inhaleActiveRef = useRef(false);
   const litRef = useRef(false);
   const burnRef = useRef(0);
+  const ashRef = useRef(0);
+  const ashDropPendingRef = useRef(false);
   const ringStartedAt = useRef(0);
   const ringId = useRef(0);
   const ringTimeouts = useRef<number[]>([]);
@@ -435,11 +437,53 @@ export default function Home() {
     ringTimeouts.current.push(timeout);
   };
 
+  const extinguishCigarette = () => {
+    litRef.current = false;
+    setLit(false);
+    micActiveRef.current = false;
+    if (micFrame.current) cancelAnimationFrame(micFrame.current);
+    micStream.current?.getTracks().forEach((track) => track.stop());
+    micSource.current?.disconnect();
+    setMicOn(false);
+    setMicLevel(0);
+  };
+
+  const scheduleAshDrop = () => {
+    if (ashDropPendingRef.current) return;
+    ashDropPendingRef.current = true;
+    const dropTimeout = window.setTimeout(() => {
+      setAshDropped(true);
+      performFlick();
+      const clearTimeoutId = window.setTimeout(() => setAshDropped(false), 2400);
+      ringTimeouts.current.push(clearTimeoutId);
+    }, 620);
+    ringTimeouts.current.push(dropTimeout);
+  };
+
   const tickInhale = (time: number) => {
     if (!inhaleActiveRef.current) return;
     const next = Math.min(100, ((time - inhaleStartedAt.current) / MAX_INHALE_MS) * 100);
+    const delta = next - inhaleProgressRef.current;
     inhaleProgressRef.current = next;
     setInhaleProgress(next);
+
+    // Live burn: the ember eats the paper and grows the ash frame by frame,
+    // so mic-driven pulls visibly smolder while you breathe.
+    if (delta > 0) {
+      const burnNow = Math.min(96, burnRef.current + delta * 0.14);
+      burnRef.current = burnNow;
+      setBurn(burnNow);
+      const ashNow = Math.min(ASH_OVERFLOW, ashRef.current + delta * 0.48);
+      ashRef.current = ashNow;
+      setAsh(ashNow);
+      if (ashNow >= ASH_OVERFLOW) scheduleAshDrop();
+      if (burnNow >= 95) {
+        extinguishCigarette();
+        endInhale(next);
+        return;
+      }
+    }
+
     if (next >= 100) {
       endInhale(100);
       return;
@@ -461,6 +505,8 @@ export default function Home() {
   const performFlick = () => {
     setFlicking(true);
     setAsh(0);
+    ashRef.current = 0;
+    ashDropPendingRef.current = false;
     setTotalFlicks((current) => current + 1);
     playNoise(0.11, 0.085, 5200);
     playTone(150, 0.1, 0.04, 90);
@@ -479,41 +525,12 @@ export default function Home() {
     setInhaling(false);
     setInhaleProgress(0);
     inhaleProgressRef.current = 0;
+    // Burn and ash were already applied live in tickInhale.
     if (strength < 10) return;
-
-    const burnAdded = Math.max(6, Math.round(strength * 0.13));
-    const ashAdded = Math.max(12, Math.round(strength * 0.46));
-    setBurn((current) => {
-      const next = Math.min(96, current + burnAdded);
-      burnRef.current = next;
-      if (next >= 95) {
-        litRef.current = false;
-        setLit(false);
-        micActiveRef.current = false;
-        if (micFrame.current) cancelAnimationFrame(micFrame.current);
-        micStream.current?.getTracks().forEach((track) => track.stop());
-        micSource.current?.disconnect();
-        setMicOn(false);
-        setMicLevel(0);
-      }
-      return next;
-    });
-    setAsh((current) => Math.min(ASH_OVERFLOW, current + ashAdded));
     setPuffs((current) => current + 1);
     setTotalPuffs((current) => current + 1);
     playTone(210, 0.12, 0.025, 130);
     if (navigator.vibrate) navigator.vibrate(22);
-
-    // Ash that gets too long drops on its own — like the real thing.
-    if (ash + ashAdded >= ASH_OVERFLOW) {
-      const dropTimeout = window.setTimeout(() => {
-        setAshDropped(true);
-        performFlick();
-        const clearTimeoutId = window.setTimeout(() => setAshDropped(false), 2400);
-        ringTimeouts.current.push(clearTimeoutId);
-      }, 620);
-      ringTimeouts.current.push(dropTimeout);
-    }
   }
 
   function monitorMicrophone() {
@@ -526,9 +543,9 @@ export default function Home() {
       total += normalized * normalized;
     }
     const level = Math.sqrt(total / samples.length);
-    const visualLevel = Math.min(100, Math.round(level * 900));
+    const visualLevel = Math.min(100, Math.round(level * 1200));
     setMicLevel(visualLevel);
-    if (level > 0.055 && litRef.current && burnRef.current < 95) {
+    if (level > 0.035 && litRef.current && burnRef.current < 95) {
       if (!inhaleActiveRef.current) beginInhale();
     } else if (inhaleActiveRef.current) {
       endInhale();
@@ -566,7 +583,7 @@ export default function Home() {
       const source = context.createMediaStreamSource(stream);
       const analyser = context.createAnalyser();
       analyser.fftSize = 512;
-      analyser.smoothingTimeConstant = 0.35;
+      analyser.smoothingTimeConstant = 0.2;
       source.connect(analyser);
       micStream.current = stream;
       micSource.current = source;
@@ -993,6 +1010,20 @@ export default function Home() {
           <div
             className={`packBox ${unboxOpen ? "open" : ""}`}
             style={{ "--card": activePack.color, "--card-glow": activePack.glow } as CSSProperties}
+            role="button"
+            tabIndex={0}
+            onClick={() => {
+              if (!unboxOpen) tearFoil();
+              else takeOne();
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                if (!unboxOpen) tearFoil();
+                else takeOne();
+              }
+            }}
+            aria-label={unboxOpen ? "Take a cigarette" : "Open the pack"}
           >
             <div className="packSticks" aria-hidden={!unboxOpen}>
               {Array.from({ length: PACK_SIZE }, (_, index) => {
@@ -1003,7 +1034,10 @@ export default function Home() {
                     key={index}
                     className={`packStick ${available ? "" : "gone"}`}
                     disabled={!unboxOpen || !available}
-                    onClick={takeOne}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      takeOne();
+                    }}
                     aria-label={available ? "Take this one" : "Already taken"}
                     tabIndex={unboxOpen ? 0 : -1}
                   >
@@ -1161,6 +1195,7 @@ export default function Home() {
               >
                 <span className="flame" />
                 <span className="ashCap"><i /></span>
+                <span className="charLine" />
                 <span className="ember" />
                 <span className="paper"><b>FAKE</b></span>
                 <span className="filter" />
