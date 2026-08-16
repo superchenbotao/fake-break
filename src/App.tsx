@@ -1152,6 +1152,8 @@ export default function Home() {
               className="cigaretteStage"
               aria-hidden="true"
               onPointerMove={(event) => {
+                // Mouse-only parallax: touch drags belong to taps and swipes.
+                if (event.pointerType !== "mouse") return;
                 const rect = event.currentTarget.getBoundingClientRect();
                 const px = (event.clientX - rect.left) / rect.width - 0.5;
                 const py = (event.clientY - rect.top) / rect.height - 0.5;
