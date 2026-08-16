@@ -1830,3 +1830,31 @@ button {
   .cigarette { width: 90px; height: min(56vh, 520px); height: min(56svh, 520px); }
   .cigaretteStage { min-height: 470px; }
 }
+
+
+/* ============ SIDE CHIPS IN FLOW — OVERLAP STRUCTURALLY IMPOSSIBLE ============ */
+/* On narrow screens the chip cluster leaves its absolute corner and becomes a
+   toolbar row above the header, so it can never cover the time line or the cigarette. */
+@media (max-width: 900px) {
+  .ritualSide {
+    position: static;
+    order: -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 6px;
+  }
+  .sceneChip, .backChip { white-space: nowrap; }
+}
+
+@media (max-width: 480px) {
+  .sceneChip, .backChip { padding: 8px 11px; }
+}
+
+@media (max-width: 360px) {
+  .ritualSide { gap: 6px; }
+  .sceneChip, .backChip { padding: 7px 9px; }
+}
