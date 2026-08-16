@@ -850,6 +850,14 @@ export default function Home() {
             </h1>
           </header>
 
+          <button type="button" className="bigCta" onClick={() => setView("packs")}>
+            <span className="ctaIcon" aria-hidden="true">🚬</span>
+            <span>
+              <strong>Take one</strong>
+              <small>Fake a smoke · free and lung-friendly</small>
+            </span>
+          </button>
+
           <section className="savedCard">
             <p className="savedLabel">Not burned so far</p>
             <p className="savedAmount">${moneySaved.toFixed(2)}</p>
@@ -948,14 +956,6 @@ export default function Home() {
             <p className="cardTitle">Today’s tough love</p>
             <p className="soupText">“{soup}”</p>
           </section>
-
-          <button type="button" className="bigCta" onClick={() => setView("packs")}>
-            <span className="ctaIcon" aria-hidden="true">🚬</span>
-            <span>
-              <strong>Take one</strong>
-              <small>Fake a smoke · free and lung-friendly</small>
-            </span>
-          </button>
 
           <p className="homeFoot">
             For fun and craving relief only · not medical advice ·{" "}

@@ -1858,3 +1858,39 @@ button {
   .ritualSide { gap: 6px; }
   .sceneChip, .backChip { padding: 7px 9px; }
 }
+
+
+/* ============ HERO CTA: BIG, FIRST, UNMISSABLE ============ */
+.bigCta {
+  margin-top: 4px;
+  margin-bottom: 10px;
+  padding: 26px 28px;
+  border-radius: 26px;
+  box-shadow:
+    0 22px 60px rgba(255, 110, 40, 0.36),
+    0 0 0 1px rgba(255, 190, 120, 0.25);
+  animation: ctaPulse 2.8s ease-in-out infinite;
+}
+.bigCta strong { font-size: 26px; }
+.bigCta small { font-size: 12px; opacity: 0.78; }
+.ctaIcon { font-size: 38px; }
+.bigCta:active { transform: scale(0.98); }
+
+@keyframes ctaPulse {
+  0%, 100% {
+    box-shadow:
+      0 22px 60px rgba(255, 110, 40, 0.32),
+      0 0 0 1px rgba(255, 190, 120, 0.22);
+  }
+  50% {
+    box-shadow:
+      0 26px 76px rgba(255, 110, 40, 0.52),
+      0 0 0 1px rgba(255, 190, 120, 0.42);
+  }
+}
+
+@media (max-width: 480px) {
+  .bigCta { padding: 22px 22px; border-radius: 22px; }
+  .bigCta strong { font-size: 23px; }
+  .ctaIcon { font-size: 32px; }
+}
