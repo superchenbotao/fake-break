@@ -2,9 +2,7 @@
  * Monetization config for Fake Break.
  *
  * How money actually reaches you (the site owner):
- *   1. The SHARE-gated packs work today with zero setup — every unlock share
- *      spreads the link and grows traffic. Traffic is the asset you sell.
- *   2. The AD-gated packs ship with a built-in simulated rewarded ad so the
+ *   1. The AD-gated packs ship with a built-in simulated rewarded ad so the
  *      feature works end-to-end right now. To collect real revenue, swap the
  *      simulated creative for a real rewarded-ad network:
  *
@@ -18,8 +16,12 @@
  *      c. Paste your client/slot IDs below and flip provider to "network",
  *         then load the network SDK where AdBreak mounts (see App.tsx).
  *
- *   3. Revenue pays out to YOUR ad-network account. This codebase never
+ *   2. Revenue pays out to YOUR ad-network account. This codebase never
  *      touches money, keys, or user data.
+ *
+ *   3. The SUPPORTER pass (see SUPPORT_CONFIG below) is the direct-payment
+ *      path: every ad-gated pack also offers a one-time checkout that
+ *      unlocks everything at once.
  *
  * Honest limitation: unlocks are verified client-side, so a determined user
  * can bypass them with devtools. For a playful ritual toy that is the right
@@ -28,7 +30,6 @@
 
 export type UnlockRule =
   | { kind: "sessions"; count: number } // earn it by using the app
-  | { kind: "share"; count: number } // earn it by spreading the app
   | { kind: "ad"; count: number }; // earn it by watching rewarded ads
 
 export const AD_CONFIG = {
@@ -44,15 +45,19 @@ export const AD_CONFIG = {
 /**
  * Route C — direct supporter payment (the fastest revenue path, zero approval).
  *
+ * The model: a one-time "Supporter pass". Every ad-gated pack shows a paid
+ * option; one checkout unlocks EVERY pack at once — simple to explain, one
+ * payment link, one success URL.
+ *
  * Setup, five minutes, no review:
  *   1. Register Ko-fi (ko-fi.com) or create a Stripe Payment Link
  *      (dashboard.stripe.com → Payment Links → $1, one-time).
- *   2. Paste the URL into paymentUrl below. Done — the "Supporter unlock"
- *      button on Old Money goes straight to your checkout.
+ *   2. Paste the URL into paymentUrl below. Done — every "Supporter pass"
+ *      button goes straight to your checkout.
  *   3. Stripe only: set the Payment Link's "after payment" redirect to
- *      https://YOUR-DOMAIN/?supporter=old-money — returning visitors land back
- *      here and the pack unlocks itself. (Ko-fi has no redirect; supporters
- *      can also just tap the link again, the URL works standalone.)
+ *      https://fakebreak.win/?supporter=all — returning supporters land back
+ *      here and every pack unlocks itself. (Ko-fi has no redirect; supporters
+ *      can also just revisit that URL, it works standalone.)
  *
  * The money goes directly to your Ko-fi/Stripe balance (~97% after fees).
  * The success URL is honor-system shareable — acceptable for a $1 playful
@@ -62,10 +67,9 @@ export const SUPPORT_CONFIG = {
   /** Paste your Ko-fi page or Stripe Payment Link here, e.g. "https://ko-fi.com/yourname". */
   paymentUrl: "",
   price: "$1",
-  packId: "old-money",
   /** Query string the payment provider redirects back to after checkout. */
   successParam: "supporter",
-  successValue: "old-money",
+  successValue: "all",
 };
 
 export type HouseAd = {
@@ -98,8 +102,8 @@ export const HOUSE_ADS: HouseAd[] = [
   },
   {
     brand: "Fake Break Premium",
-    tagline: "Your friends unlock packs faster when you share. Just saying.",
-    cta: "Share this site",
+    tagline: "Supporters skip every ad and own every pack. Just saying.",
+    cta: "Become a supporter",
     accent: "#db81ee",
     glow: "rgba(219, 129, 238, 0.22)",
   },
