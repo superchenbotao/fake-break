@@ -268,6 +268,7 @@ export default function Home() {
   const burnRef = useRef(0);
   const ashRef = useRef(0);
   const ashDropPendingRef = useRef(false);
+  const noiseFloorRef = useRef(0.015);
   const ringStartedAt = useRef(0);
   const ringId = useRef(0);
   const ringTimeouts = useRef<number[]>([]);
@@ -535,20 +536,31 @@ export default function Home() {
 
   function monitorMicrophone() {
     if (!micActiveRef.current || !micAnalyser.current) return;
-    const samples = new Uint8Array(micAnalyser.current.fftSize);
-    micAnalyser.current.getByteTimeDomainData(samples);
+    // Float time-domain data keeps whisper-level resolution that byte data
+    // quantizes away, so tiny sounds still register.
+    const samples = new Float32Array(micAnalyser.current.fftSize);
+    micAnalyser.current.getFloatTimeDomainData(samples);
     let total = 0;
-    for (const sample of samples) {
-      const normalized = (sample - 128) / 128;
-      total += normalized * normalized;
-    }
+    for (const sample of samples) total += sample * sample;
     const level = Math.sqrt(total / samples.length);
-    const visualLevel = Math.min(100, Math.round(level * 1200));
+
+    // Adaptive noise floor with hysteresis: learn the room while idle, then
+    // trigger just above it — a faint breath in a quiet room still counts.
+    const trigger = Math.max(0.012, noiseFloorRef.current * 2.4);
+    const release = Math.max(0.009, noiseFloorRef.current * 1.5);
+    if (!inhaleActiveRef.current && level < trigger) {
+      const drift = noiseFloorRef.current + (level - noiseFloorRef.current) * 0.04;
+      noiseFloorRef.current = Math.min(0.05, Math.max(0.004, drift));
+    }
+
+    // Perceptual meter curve keeps small signals visible instead of pinned at 0.
+    const visualLevel = Math.min(100, Math.round(Math.pow(Math.min(1, level * 22), 0.55) * 100));
     setMicLevel(visualLevel);
-    if (level > 0.035 && litRef.current && burnRef.current < 95) {
-      if (!inhaleActiveRef.current) beginInhale();
-    } else if (inhaleActiveRef.current) {
-      endInhale();
+
+    if (inhaleActiveRef.current) {
+      if (level < release) endInhale();
+    } else if (level > trigger && litRef.current && burnRef.current < 95) {
+      beginInhale();
     }
     micFrame.current = requestAnimationFrame(monitorMicrophone);
   }
@@ -589,6 +601,7 @@ export default function Home() {
       micSource.current = source;
       micAnalyser.current = analyser;
       micActiveRef.current = true;
+      noiseFloorRef.current = 0.015;
       setMicOn(true);
       monitorMicrophone();
     } catch {
@@ -827,6 +840,7 @@ export default function Home() {
       className={`shell view-${view}`}
       style={{ "--pack": activePack.color, "--pack-glow": activePack.glow } as CSSProperties}
     >
+      <div className="filmGrain" aria-hidden="true" />
       {view === "home" && (
         <div className="homeView">
           <header className="homeHeader">
@@ -1134,7 +1148,21 @@ export default function Home() {
           </div>
 
           <div className="stageRow">
-            <div className="cigaretteStage" aria-hidden="true">
+            <div
+              className="cigaretteStage"
+              aria-hidden="true"
+              onPointerMove={(event) => {
+                const rect = event.currentTarget.getBoundingClientRect();
+                const px = (event.clientX - rect.left) / rect.width - 0.5;
+                const py = (event.clientY - rect.top) / rect.height - 0.5;
+                event.currentTarget.style.setProperty("--tilt-x", `${(px * 5).toFixed(2)}deg`);
+                event.currentTarget.style.setProperty("--tilt-y", `${(-py * 4).toFixed(2)}deg`);
+              }}
+              onPointerLeave={(event) => {
+                event.currentTarget.style.setProperty("--tilt-x", "0deg");
+                event.currentTarget.style.setProperty("--tilt-y", "0deg");
+              }}
+            >
               <div className="halo" />
               <div className="ringField">
                 {smokeRings.map((ring, index) => (
@@ -1190,10 +1218,12 @@ export default function Home() {
                     "--ash-height": `${Math.min(58, 8 + ash * 0.48)}px`,
                     "--ash-opacity": ash >= 5 ? 1 : 0,
                     "--ash-tilt": ash >= 70 ? "4.5deg" : "0deg",
+                    "--ei": !lit ? 0 : inhaling ? 1 : micOn ? Math.min(1, 0.25 + micLevel / 55) : 0.32,
                   } as CSSProperties
                 }
               >
                 <span className="flame" />
+                <span className="wisps" aria-hidden="true"><i /><i /><i /></span>
                 <span className="ashCap"><i /></span>
                 <span className="charLine" />
                 <span className="ember" />
@@ -1217,7 +1247,8 @@ export default function Home() {
               </button>
               <button
                 type="button"
-                className={micOn ? "railOn" : ""}
+                className={`micLive ${micOn ? "railOn" : ""}`}
+                style={{ "--ml": micLevel / 100 } as CSSProperties}
                 onClick={toggleMicrophone}
                 disabled={!lit || burn >= 95}
                 aria-pressed={micOn}
