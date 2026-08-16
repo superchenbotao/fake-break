@@ -65,7 +65,7 @@ export const AD_CONFIG = {
  */
 export const SUPPORT_CONFIG = {
   /** Paste your Ko-fi page or Stripe Payment Link here, e.g. "https://ko-fi.com/yourname". */
-  paymentUrl: "",
+  paymentUrl: "https://ko-fi.com/botaochen",
   price: "$1",
   /** Query string the payment provider redirects back to after checkout. */
   successParam: "supporter",

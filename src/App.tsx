@@ -810,12 +810,20 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
+  const [checkoutOpened, setCheckoutOpened] = useState(false);
+
   const openSupporterCheckout = () => {
     if (!SUPPORT_CONFIG.paymentUrl) {
       showToast("Checkout link goes here — one line in monetization.ts");
       return;
     }
     window.open(SUPPORT_CONFIG.paymentUrl, "_blank", "noopener");
+    setCheckoutOpened(true);
+  };
+
+  /** Ko-fi has no post-payment redirect — supporters claim the pass manually. */
+  const claimSupporterPass = () => {
+    window.location.href = `${window.location.pathname}?${SUPPORT_CONFIG.successParam}=${SUPPORT_CONFIG.successValue}`;
   };
 
   // Route C return fanfare: chime + scrub the query string. The unlock itself
@@ -1787,6 +1795,11 @@ export default function Home() {
                     ★ Supporter pass · {SUPPORT_CONFIG.price}
                     <small>One-time · unlocks every pack · instant</small>
                   </button>
+                  {checkoutOpened && (
+                    <button type="button" className="sheetDismiss" onClick={claimSupporterPass}>
+                      Already supported? Claim your pass →
+                    </button>
+                  )}
                 </>
               )}
 
