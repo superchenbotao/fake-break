@@ -363,6 +363,43 @@ button { color: inherit; }
   filter: blur(20px);
 }
 .packCard:hover:not(.locked) { transform: translateY(-6px); border-color: var(--card-glow); }
+
+/* Per-pack cover motifs — shared by shelf cards and box faces */
+.motif-stripes {
+  background-image:
+    repeating-linear-gradient(
+      100deg,
+      transparent 0 14px,
+      color-mix(in srgb, var(--card-glow) 9%, transparent) 14px 15px,
+      transparent 15px 30px
+    ) !important;
+  background-color: color-mix(in srgb, var(--card) 48%, #0c0b0a);
+}
+.motif-dots {
+  background-image:
+    radial-gradient(color-mix(in srgb, var(--card-glow) 14%, transparent) 1.2px, transparent 1.6px) !important;
+  background-size: 18px 18px !important;
+  background-color: color-mix(in srgb, var(--card) 46%, #0c0b0a);
+}
+.motif-waves {
+  background-image:
+    repeating-radial-gradient(
+      circle at 50% -30%,
+      transparent 0 20px,
+      color-mix(in srgb, var(--card-glow) 8%, transparent) 20px 22px
+    ) !important;
+  background-color: color-mix(in srgb, var(--card) 46%, #0c0b0a);
+}
+.motif-sunburst {
+  background-image:
+    repeating-conic-gradient(
+      from -90deg at 50% 118%,
+      transparent 0deg 14deg,
+      color-mix(in srgb, var(--card-glow) 8%, transparent) 14deg 16deg
+    ) !important;
+  background-color: color-mix(in srgb, var(--card) 46%, #0c0b0a);
+}
+
 .packCard.selected { outline: 2px solid var(--acid); outline-offset: 3px; }
 .packCard.locked { filter: grayscale(.85) brightness(.55); cursor: not-allowed; }
 .packPrice {
@@ -596,20 +633,31 @@ button { color: inherit; }
   top: 48%;
   width: 100%;
   text-align: center;
-  color: #b1953b;
+  color: var(--cig-band, #b1953b);
   font: 700 11px/1 Georgia, serif;
   letter-spacing: .12em;
   writing-mode: vertical-rl;
   left: 0;
   transform: translateY(-10%);
 }
+
+/* fine glue seam down the paper — tiny detail, big realism */
+.paper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 14%;
+  width: 1px;
+  background: rgba(90, 78, 60, .16);
+}
 .filter {
   height: 28%;
   border-radius: 0 0 11px 11px;
-  background-color: #b7824c;
-  background-image: radial-gradient(#684827 1px, transparent 1.5px);
+  background-color: var(--cig-filter, #b7824c);
+  background-image: radial-gradient(rgba(0, 0, 0, .38) 1px, transparent 1.5px);
   background-size: 7px 7px;
-  box-shadow: inset 0 9px rgba(69, 42, 21, .28);
+  box-shadow: inset 0 9px rgba(0, 0, 0, .22);
 }
 
 .ember {
@@ -1092,7 +1140,7 @@ button { color: inherit; }
   height: 100%;
   border-radius: 4px 4px 2px 2px;
   background:
-    linear-gradient(180deg, #faf8f1 0 68%, #d8b96a 68% 70%, #b7824c 70% 100%);
+    linear-gradient(180deg, #faf8f1 0 68%, color-mix(in srgb, var(--cig-filter, #b7824c) 55%, #fff) 68% 70%, var(--cig-filter, #b7824c) 70% 100%);
   box-shadow: inset 0 0 0 1px rgba(54, 47, 39, .14), 2px 0 5px rgba(0, 0, 0, .25);
 }
 .packStick:hover:not(:disabled) { transform: translateY(-9%); }
@@ -1152,7 +1200,7 @@ button { color: inherit; }
 .isLit .halo {
   border-color: color-mix(in srgb, var(--pack-glow) 40%, transparent);
 }
-.filter { border-top: 2px solid #d8b96a; }
+.filter { border-top: 3px solid var(--cig-band, #d8b96a); }
 
 /* ash cap droops when it gets long */
 .ashCap { transform: rotate(var(--ash-tilt, 0deg)); transition: height .2s ease, top .2s ease, opacity .2s ease, transform .45s ease; }
@@ -1255,7 +1303,12 @@ button { color: inherit; }
 .paper {
   background:
     linear-gradient(90deg, rgba(60, 50, 40, .32), rgba(255, 255, 255, .28) 32%, rgba(255, 255, 255, .05) 55%, rgba(60, 50, 40, .34)),
-    repeating-linear-gradient(90deg, #f2efe8 0 7px, #e6e0d5 8px, #faf8f1 10px);
+    repeating-linear-gradient(
+      90deg,
+      var(--cig-paper, #f2efe8) 0 7px,
+      color-mix(in srgb, var(--cig-paper, #e6e0d5) 88%, #7a6f5e) 8px,
+      color-mix(in srgb, var(--cig-paper, #faf8f1) 60%, #ffffff) 10px
+    );
 }
 .filter {
   background-image:

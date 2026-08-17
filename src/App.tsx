@@ -21,6 +21,13 @@ type Pack = {
   paid?: boolean;
   color: string;
   glow: string;
+  /** Cover-art motif shared by the shelf card and the box face. */
+  motif: "sunburst" | "stripes" | "dots" | "waves";
+  /** Word printed down the cigarette paper. */
+  stick: string;
+  paperTint: string;
+  filterColor: string;
+  bandColor: string;
 };
 
 type SmokeRing = {
@@ -42,6 +49,11 @@ const PACKS: Pack[] = [
     rule: { kind: "sessions", count: 0 },
     color: "#33507e",
     glow: "#8ab8ff",
+    motif: "waves",
+    stick: "FAKE",
+    paperTint: "#f2efe8",
+    filterColor: "#b7824c",
+    bandColor: "#d8b96a",
   },
   {
     id: "golden-alibi",
@@ -53,6 +65,11 @@ const PACKS: Pack[] = [
     rule: { kind: "sessions", count: 2 },
     color: "#a5741a",
     glow: "#ffd95e",
+    motif: "sunburst",
+    stick: "ALIBI",
+    paperTint: "#f6efdd",
+    filterColor: "#a06a34",
+    bandColor: "#ffd95e",
   },
   {
     id: "soft-reset",
@@ -64,6 +81,43 @@ const PACKS: Pack[] = [
     rule: { kind: "sessions", count: 4 },
     color: "#4e5b51",
     glow: "#b7d2bd",
+    motif: "dots",
+    stick: "RESET",
+    paperTint: "#f6f4ee",
+    filterColor: "#9aa88f",
+    bandColor: "#c9d8c4",
+  },
+  {
+    id: "night-shift",
+    name: "Night Shift",
+    mood: "3AM CLARITY · NO REGRETS",
+    flavor: "Cold coffee steam · fluorescent calm",
+    line: "For the craving that clocks in after dark.",
+    price: "$9",
+    rule: { kind: "sessions", count: 8 },
+    color: "#1f2b4a",
+    glow: "#6f8fff",
+    motif: "stripes",
+    stick: "NIGHT",
+    paperTint: "#eceef4",
+    filterColor: "#2e2a26",
+    bandColor: "#c9ccd4",
+  },
+  {
+    id: "first-light",
+    name: "First Light",
+    mood: "DAWN PATROL · FRESH PAGE",
+    flavor: "Cold sunrise · faint orange peel",
+    line: "The morning you didn’t smoke tastes better.",
+    price: "$11",
+    rule: { kind: "sessions", count: 14 },
+    color: "#7a4a52",
+    glow: "#ffb3c1",
+    motif: "sunburst",
+    stick: "DAWN",
+    paperTint: "#f7efe6",
+    filterColor: "#caa06a",
+    bandColor: "#f4c7cf",
   },
   {
     id: "main-character",
@@ -76,6 +130,11 @@ const PACKS: Pack[] = [
     paid: true,
     color: "#5e2a68",
     glow: "#db81ee",
+    motif: "sunburst",
+    stick: "DRAMA",
+    paperTint: "#f4eef6",
+    filterColor: "#3d1d46",
+    bandColor: "#db81ee",
   },
   {
     id: "paper-trail",
@@ -88,6 +147,28 @@ const PACKS: Pack[] = [
     paid: true,
     color: "#43506b",
     glow: "#a9c1e8",
+    motif: "stripes",
+    stick: "FILED",
+    paperTint: "#f4f3ee",
+    filterColor: "#5a6478",
+    bandColor: "#a9c1e8",
+  },
+  {
+    id: "velvet-static",
+    name: "Velvet Static",
+    mood: "LOW SIGNAL · HIGH DRAMA",
+    flavor: "Dark cherry static · velvet reverb",
+    line: "Tuned to the frequency of almost.",
+    price: "$10",
+    rule: { kind: "ad", count: 1 },
+    paid: true,
+    color: "#6e1f2e",
+    glow: "#ff8fa3",
+    motif: "dots",
+    stick: "VELVET",
+    paperTint: "#f6ecec",
+    filterColor: "#4a1620",
+    bandColor: "#d8a24a",
   },
   {
     id: "gaslight",
@@ -100,6 +181,11 @@ const PACKS: Pack[] = [
     paid: true,
     color: "#7e3b1f",
     glow: "#ffab7a",
+    motif: "waves",
+    stick: "TRUST",
+    paperTint: "#f7f0e4",
+    filterColor: "#8a5a30",
+    bandColor: "#ffab7a",
   },
   {
     id: "midnight-snack",
@@ -112,6 +198,11 @@ const PACKS: Pack[] = [
     paid: true,
     color: "#3a3f7a",
     glow: "#9aa4ff",
+    motif: "dots",
+    stick: "2AM",
+    paperTint: "#eef0f8",
+    filterColor: "#3c3660",
+    bandColor: "#9aa4ff",
   },
   {
     id: "old-money",
@@ -124,6 +215,28 @@ const PACKS: Pack[] = [
     paid: true,
     color: "#274435",
     glow: "#8fd4a8",
+    motif: "stripes",
+    stick: "EST. 0mg",
+    paperTint: "#f2f0e4",
+    filterColor: "#22382c",
+    bandColor: "#d4af37",
+  },
+  {
+    id: "lucky-ghost",
+    name: "Lucky Ghost",
+    mood: "PALE LUCK · VANISHING ACT",
+    flavor: "White tea mist · barely there",
+    line: "The cigarette that quit before you did.",
+    price: "$30",
+    rule: { kind: "ad", count: 3 },
+    paid: true,
+    color: "#3d4f4a",
+    glow: "#b8f0d4",
+    motif: "waves",
+    stick: "LUCKY",
+    paperTint: "#fbfaf5",
+    filterColor: "#8fae9e",
+    bandColor: "#e8e4d8",
   },
 ];
 
@@ -1394,7 +1507,7 @@ export default function Home() {
                 <button
                   type="button"
                   key={pack.id}
-                  className={`packCard ${selected ? "selected" : ""} ${unlocked ? "" : "locked"} lock-${pack.rule.kind}`}
+                  className={`packCard motif-${pack.motif} ${selected ? "selected" : ""} ${unlocked ? "" : "locked"} lock-${pack.rule.kind}`}
                   style={{ "--card": pack.color, "--card-glow": pack.glow } as CSSProperties}
                   onClick={() => (unlocked ? startUnbox(pack.id) : setUnlockSheetId(pack.id))}
                   aria-pressed={selected}
@@ -1432,7 +1545,7 @@ export default function Home() {
 
           <div
             className={`packBox ${unboxOpen ? "open" : ""}`}
-            style={{ "--card": activePack.color, "--card-glow": activePack.glow } as CSSProperties}
+            style={{ "--card": activePack.color, "--card-glow": activePack.glow, "--cig-filter": activePack.filterColor } as CSSProperties}
             role="button"
             tabIndex={0}
             onClick={() => {
@@ -1470,7 +1583,7 @@ export default function Home() {
               })}
             </div>
             <div className="packBody">
-              <div className="packFace">
+              <div className={`packFace motif-${activePack.motif}`}>
                 <span className="packFaceTag">PRETEND · 0mg EVERYTHING</span>
                 <strong>{activePack.name}</strong>
                 <span className="packFaceMood">{activePack.mood}</span>
@@ -1630,6 +1743,9 @@ export default function Home() {
                     "--ash-opacity": ash >= 5 ? 1 : 0,
                     "--ash-tilt": ash >= 70 ? "4.5deg" : "0deg",
                     "--ei": !lit ? 0 : inhaling ? 1 : micOn ? Math.min(1, 0.25 + micLevel / 55) : 0.32,
+                    "--cig-paper": activePack.paperTint,
+                    "--cig-filter": activePack.filterColor,
+                    "--cig-band": activePack.bandColor,
                   } as CSSProperties
                 }
               >
@@ -1638,7 +1754,7 @@ export default function Home() {
                 <span className="ashCap"><i /></span>
                 <span className="charLine" />
                 <span className="ember" />
-                <span className="paper"><b>FAKE</b></span>
+                <span className="paper"><b>{activePack.stick}</b></span>
                 <span className="filter" />
               </button>
             </div>
