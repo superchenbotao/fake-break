@@ -2753,3 +2753,60 @@ html[data-nav-dir="back"]::view-transition-new(root) { animation-name: viewInBac
     .homeView, .packsView, .unboxView, .ritualView, .legalView { animation: none; }
   }
 }
+
+/* ============ ROUND: CINEMATIC TRANSITIONS ============ */
+
+/* asymmetric timing: the old view exits fast, the new one lands on a long
+   silk curve with a faint brightness bloom as the blur sharpens */
+::view-transition-old(root) {
+  animation-duration: .3s;
+  animation-timing-function: cubic-bezier(.5, 0, .75, 0);
+}
+::view-transition-new(root) {
+  animation-duration: .52s;
+  animation-delay: .05s;
+  animation-timing-function: cubic-bezier(.16, .84, .3, 1);
+}
+@keyframes viewOutFwd {
+  to { opacity: 0; transform: translateY(-24px) scale(.968); filter: blur(9px); }
+}
+@keyframes viewInFwd {
+  from { opacity: 0; transform: translateY(32px) scale(.982); filter: blur(9px) brightness(1.3); }
+}
+@keyframes viewOutBack {
+  to { opacity: 0; transform: translateY(24px) scale(.968); filter: blur(9px); }
+}
+@keyframes viewInBack {
+  from { opacity: 0; transform: translateY(-32px) scale(.982); filter: blur(9px) brightness(1.3); }
+}
+
+/* ignite: unbox → ritual. The pack rushes toward you and flares warm like a
+   struck match; the cigarette rises through the glow. */
+html[data-nav-kind="ignite"]::view-transition-old(root) {
+  animation: igniteOut .5s cubic-bezier(.4, 0, .6, 1) both;
+}
+html[data-nav-kind="ignite"]::view-transition-new(root) {
+  animation: igniteIn .62s .1s cubic-bezier(.16, .84, .3, 1) both;
+}
+@keyframes igniteOut {
+  35% { opacity: 1; transform: scale(1.045); filter: brightness(1.9) saturate(1.7) blur(2px); }
+  100% { opacity: 0; transform: scale(1.14); filter: brightness(2.8) saturate(2.1) blur(14px); }
+}
+@keyframes igniteIn {
+  from { opacity: 0; transform: translateY(28px); filter: brightness(1.8) saturate(1.4) blur(8px); }
+}
+
+/* settle: ritual → home. The scene exhales — drifts down, dims, and the
+   dashboard fades back in calm and still. */
+html[data-nav-kind="settle"]::view-transition-old(root) {
+  animation: settleOut .48s cubic-bezier(.5, 0, .75, 0) both;
+}
+html[data-nav-kind="settle"]::view-transition-new(root) {
+  animation: settleIn .55s .08s cubic-bezier(.2, .75, .3, 1) both;
+}
+@keyframes settleOut {
+  to { opacity: 0; transform: translateY(30px) scale(.975); filter: blur(7px) brightness(.82); }
+}
+@keyframes settleIn {
+  from { opacity: 0; transform: translateY(12px); filter: blur(4px) brightness(1.12); }
+}

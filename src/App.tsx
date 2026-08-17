@@ -1075,7 +1075,9 @@ export default function Home() {
 
   // Direction-aware page transitions: View Transitions API where available,
   // a CSS enter animation elsewhere, nothing when reduced motion is wanted.
-  const navigate = (next: View, options?: { back?: boolean }) => {
+  // `kind` adds cinematic flavours: "ignite" (unbox → ritual) flashes warm
+  // like a struck match, "settle" (ritual → home) drifts down gently.
+  const navigate = (next: View, options?: { back?: boolean; kind?: "ignite" | "settle" }) => {
     if (next === view) return;
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     const startViewTransition = (document as Document & {
@@ -1086,6 +1088,12 @@ export default function Home() {
       return;
     }
     document.documentElement.dataset.navDir = options?.back ? "back" : "fwd";
+    if (options?.kind) {
+      document.documentElement.dataset.navKind = options.kind;
+      window.setTimeout(() => delete document.documentElement.dataset.navKind, 900);
+    } else {
+      delete document.documentElement.dataset.navKind;
+    }
     startViewTransition.call(document, () => flushSync(() => setView(next)));
   };
 
@@ -1254,7 +1262,7 @@ export default function Home() {
     }));
     resetRitual();
     setMicError("");
-    navigate("ritual");
+    navigate("ritual", { kind: "ignite" });
   };
 
   const refillPack = () => {
@@ -1266,7 +1274,7 @@ export default function Home() {
   const quitRitual = () => {
     resetRitual();
     setCompleted(false);
-    navigate("home", { back: true });
+    navigate("home", { back: true, kind: "settle" });
   };
 
   // ---------- Derived data ----------
