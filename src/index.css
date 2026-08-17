@@ -2697,3 +2697,16 @@ button {
    button feels broken on touch, a dimmed one with a toast explains itself */
 .ritualRail button.railDim { opacity: .45; }
 .ritualRail button.railDim:active { transform: scale(.94); }
+
+/* a long press must NEVER start a text selection anywhere in the app —
+   on iOS, selection steals the gesture and kills the hold mid-pull */
+#root {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* ...except the legal pages, which are meant to be read and copied */
+.legalCard, .legalCard * {
+  -webkit-user-select: text;
+  user-select: text;
+}

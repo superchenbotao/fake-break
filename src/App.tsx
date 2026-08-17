@@ -719,6 +719,45 @@ export default function Home() {
     if (navigator.vibrate) navigator.vibrate(22);
   }
 
+  // Idle smolder: a lit cigarette keeps burning gently even between pulls —
+  // the ember eats forward slowly, ash keeps growing, and left alone long
+  // enough it burns itself out, exactly like the real thing.
+  useEffect(() => {
+    if (!lit) return;
+    let frame: number;
+    let last = performance.now();
+    let toasted = false;
+    const smolder = (now: number) => {
+      const dt = Math.min(120, now - last); // clamp tab-switch jumps
+      last = now;
+      if (litRef.current && !inhaleActiveRef.current) {
+        const burnNow = Math.min(96, burnRef.current + dt * 0.0005); // ~3 min to burn out
+        if (burnNow !== burnRef.current) {
+          burnRef.current = burnNow;
+          setBurn(burnNow);
+        }
+        const ashNow = Math.min(ASH_OVERFLOW, ashRef.current + dt * 0.0006);
+        if (ashNow !== ashRef.current) {
+          ashRef.current = ashNow;
+          setAsh(ashNow);
+          if (ashNow >= ASH_OVERFLOW) scheduleAshDrop();
+        }
+        if (burnNow >= 95) {
+          extinguishCigarette();
+          if (!toasted) {
+            toasted = true;
+            showToast("It burned down on its own ☁️");
+          }
+          return;
+        }
+      }
+      frame = requestAnimationFrame(smolder);
+    };
+    frame = requestAnimationFrame(smolder);
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lit]);
+
   function monitorMicrophone() {
     if (!micActiveRef.current || !micAnalyser.current) return;
     // Float time-domain data keeps whisper-level resolution that byte data
