@@ -2580,3 +2580,115 @@ button {
   60% { transform: translateY(-58px) scaleY(1.15) skewX(8deg); opacity: .6; }
   100% { transform: translateY(-120px) scaleY(1.4) skewX(-10deg); opacity: 0; }
 }
+
+/* ============ ROUND: MOBILE HOLD FIX & FLAME REBUILD ============ */
+
+/* a long press must belong to the button — no scroll, callout or selection theft */
+.startButton {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.cigarette {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* --- flame rebuild: heat halo + three morphing tongues + ignition sparks --- */
+.flame {
+  height: 54px;
+  top: calc(var(--burn-offset, 0px) - 50px);
+}
+.flame::before {
+  inset: -34% -30%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 62%, rgba(255, 158, 56, .5), rgba(255, 96, 22, .2) 55%, transparent 75%);
+  filter: blur(7px);
+}
+.flame::after { content: none; }
+.flame i {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform-origin: center bottom;
+}
+.flame i:nth-child(1) {
+  width: 62%;
+  margin-left: -31%;
+  height: 100%;
+  border-radius: 48% 52% 50% 50% / 62% 60% 40% 38%;
+  background: linear-gradient(to top, rgba(255, 74, 0, .95), rgba(255, 132, 26, .9) 42%, rgba(255, 180, 46, .75) 72%, transparent 96%);
+  filter: blur(1.4px);
+}
+.flame i:nth-child(2) {
+  width: 40%;
+  margin-left: -20%;
+  height: 76%;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: linear-gradient(to top, rgba(255, 148, 10, .95), rgba(255, 210, 62, .85) 58%, transparent 92%);
+  filter: blur(.8px);
+}
+.flame i:nth-child(3) {
+  width: 20%;
+  margin-left: -10%;
+  height: 48%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 72%, #ffffff 0 30%, rgba(255, 240, 170, .9) 55%, transparent 78%);
+  filter: blur(.5px);
+  mix-blend-mode: screen;
+}
+.justLit .flame i:nth-child(1) { animation: flameLick1 .29s ease-in-out infinite; }
+.justLit .flame i:nth-child(2) { animation: flameLick2 .21s ease-in-out infinite; }
+.justLit .flame i:nth-child(3) { animation: flameCore .13s ease-in-out infinite alternate; }
+@keyframes flameLick1 {
+  0%, 100% { transform: scaleY(1) skewX(-2deg); border-radius: 48% 52% 50% 50% / 62% 60% 40% 38%; }
+  33% { transform: scaleY(1.14) skewX(3.5deg); border-radius: 56% 44% 52% 48% / 70% 56% 44% 30%; }
+  66% { transform: scaleY(.92) skewX(-4deg); border-radius: 42% 58% 46% 54% / 56% 68% 32% 44%; }
+}
+@keyframes flameLick2 {
+  0%, 100% { transform: scaleY(.96) skewX(2.5deg) translateX(-4%); }
+  50% { transform: scaleY(1.12) skewX(-3deg) translateX(5%); }
+}
+
+/* ignition sparks scatter off the tip */
+.justLit .flame::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffd76a;
+  box-shadow:
+    -16px -6px 0 -1px #ffb03a,
+    13px -11px 0 -1px #ff8a2e,
+    -7px -20px 0 -1.5px #ffd76a,
+    9px -26px 0 -1.5px #ffb03a,
+    2px -14px 0 -1px #ffe98a;
+  animation: sparkFly .55s ease-out both;
+}
+@keyframes sparkFly {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-24px) scale(.45); }
+}
+
+/* while drawing, a hot band surges up through the ember */
+.isHolding .ember::before {
+  content: "";
+  position: absolute;
+  inset: -8px -14%;
+  border-radius: 40%;
+  background: linear-gradient(to top, transparent 10%, rgba(255, 176, 64, .7) 50%, transparent 90%);
+  filter: blur(2px);
+  animation: emberSurge .48s linear infinite;
+  pointer-events: none;
+}
+@keyframes emberSurge {
+  0% { transform: translateY(34%); opacity: .15; }
+  40% { opacity: .95; }
+  100% { transform: translateY(-34%); opacity: .15; }
+}

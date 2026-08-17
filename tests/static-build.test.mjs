@@ -26,7 +26,7 @@ test("ships the complete interactive ritual and synthesized sound", async () => 
   ]) {
     assert.ok(source.includes(control), `missing control: ${control}`);
   }
-  assert.match(source, /new AudioContext\(\)/);
+  assert.match(source, /new AudioCtor\(\)/);
   assert.match(source, /createBufferSource\(\)/);
   assert.match(source, /getUserMedia\(/);
 });

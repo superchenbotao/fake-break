@@ -506,7 +506,10 @@ export default function Home() {
 
   const getAudioContext = useCallback(() => {
     if (!soundOn) return null;
-    const context = audioContext.current ?? new AudioContext();
+    const AudioCtor = window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtor) return null;
+    const context = audioContext.current ?? new AudioCtor();
     audioContext.current = context;
     if (context.state === "suspended") void context.resume();
     return context;
@@ -628,9 +631,13 @@ export default function Home() {
 
   const tickInhale = (time: number) => {
     if (!inhaleActiveRef.current) return;
-    const next = Math.min(100, ((time - inhaleStartedAt.current) / MAX_INHALE_MS) * 100);
-    const delta = next - inhaleProgressRef.current;
-    inhaleProgressRef.current = next;
+    // Raw progress keeps running past 100% so a long steady hold keeps
+    // smoldering (at a calmer rate) instead of forcing a release.
+    const raw = ((time - inhaleStartedAt.current) / MAX_INHALE_MS) * 100;
+    const next = Math.min(100, raw);
+    const rawDelta = raw - inhaleProgressRef.current;
+    const delta = rawDelta * (raw > 100 ? 0.55 : 1);
+    inhaleProgressRef.current = raw;
     setInhaleProgress(next);
 
     // Live burn: the ember eats the paper and grows the ash frame by frame,
@@ -654,10 +661,6 @@ export default function Home() {
       }
     }
 
-    if (next >= 100) {
-      endInhale(100);
-      return;
-    }
     inhaleFrame.current = requestAnimationFrame(tickInhale);
   };
 
@@ -719,12 +722,25 @@ export default function Home() {
   function monitorMicrophone() {
     if (!micActiveRef.current || !micAnalyser.current) return;
     // Float time-domain data keeps whisper-level resolution that byte data
-    // quantizes away, so tiny sounds still register.
-    const samples = new Float32Array(micAnalyser.current.fftSize);
-    micAnalyser.current.getFloatTimeDomainData(samples);
-    let total = 0;
-    for (const sample of samples) total += sample * sample;
-    const level = Math.sqrt(total / samples.length);
+    // quantizes away, so tiny sounds still register. Older mobile WebKit
+    // lacks the float API — fall back to centered byte samples there.
+    let level: number;
+    if (typeof micAnalyser.current.getFloatTimeDomainData === "function") {
+      const samples = new Float32Array(micAnalyser.current.fftSize);
+      micAnalyser.current.getFloatTimeDomainData(samples);
+      let total = 0;
+      for (const sample of samples) total += sample * sample;
+      level = Math.sqrt(total / samples.length);
+    } else {
+      const bytes = new Uint8Array(micAnalyser.current.fftSize);
+      micAnalyser.current.getByteTimeDomainData(bytes);
+      let total = 0;
+      for (const byte of bytes) {
+        const centered = (byte - 128) / 128;
+        total += centered * centered;
+      }
+      level = Math.sqrt(total / bytes.length);
+    }
     micLevelLiveRef.current = level;
 
     // Adaptive noise floor with hysteresis: learn the room while idle, then
@@ -770,10 +786,20 @@ export default function Home() {
     }
     setMicError("");
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: false },
-      });
-      const context = audioContext.current ?? new AudioContext();
+      // Some mobile browsers (notably iOS Safari) reject exact DSP
+      // constraints — fall back to a plain audio request before giving up.
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: false },
+        });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+      const AudioCtor = window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtor) throw new Error("AudioContext unavailable");
+      const context = audioContext.current ?? new AudioCtor();
       audioContext.current = context;
       if (context.state === "suspended") await context.resume();
       const source = context.createMediaStreamSource(stream);
@@ -1812,7 +1838,7 @@ export default function Home() {
                   } as CSSProperties
                 }
               >
-                <span className="flame" />
+                <span className="flame" aria-hidden="true"><i /><i /><i /></span>
                 <span className="wisps" aria-hidden="true"><i /><i /><i /><i /></span>
                 <span className="ashCap"><i /></span>
                 {flicking && (
@@ -1907,7 +1933,12 @@ export default function Home() {
               className="startButton"
               type="button"
               onPointerDown={(event) => {
-                event.currentTarget.setPointerCapture(event.pointerId);
+                event.preventDefault();
+                try {
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                } catch {
+                  // synthetic or already-released pointers cannot be captured
+                }
                 if (!litRef.current && burnRef.current < 95) {
                   lightCigarette();
                   return;
@@ -1916,6 +1947,7 @@ export default function Home() {
               }}
               onPointerUp={() => endInhale()}
               onPointerCancel={() => endInhale()}
+              onLostPointerCapture={() => endInhale()}
               onKeyDown={(event) => {
                 if ((event.key === " " || event.key === "Enter") && !event.repeat) {
                   if (!litRef.current && burnRef.current < 95) lightCigarette();
