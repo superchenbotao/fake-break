@@ -1024,6 +1024,10 @@ export default function Home() {
             </span>
           </button>
 
+          <button type="button" className="rescueCta" onClick={() => startUnbox(activePack.id)}>
+            🆘 Craving right now? Skip the menu — straight to a break
+          </button>
+
           <section className="savedCard">
             <p className="savedLabel">Not burned so far</p>
             <p className="savedAmount">${moneySaved.toFixed(2)}</p>
@@ -1121,6 +1125,80 @@ export default function Home() {
           <section className="soupCard">
             <p className="cardTitle">Today’s tough love</p>
             <p className="soupText">“{soup}”</p>
+          </section>
+
+          <section className="whyCard">
+            <p className="cardTitle">Why a fake cigarette works</p>
+            <div className="whyRow">
+              <strong>Urges are waves, not walls</strong>
+              <span>
+                A craving crests around 90 seconds and fades within about three minutes. One fake
+                break runs exactly that long — you ride the wave out instead of fighting it.
+              </span>
+            </div>
+            <div className="whyRow">
+              <strong>Your hands need a job</strong>
+              <span>
+                Half of smoking is choreography: tap, draw, flick, exhale. Keep the ritual, delete
+                the smoke, and the habit loop completes without nicotine.
+              </span>
+            </div>
+            <div className="whyRow">
+              <strong>The pause was the point</strong>
+              <span>
+                Stepping away for three quiet minutes is what your brain actually wanted. The
+                cigarette was just the ticket stub.
+              </span>
+            </div>
+          </section>
+
+          <section className="faqCard">
+            <p className="cardTitle">Questions, answered</p>
+            <details>
+              <summary>Is Fake Break an app?</summary>
+              <p>
+                No download, no account. It’s a website that works on any phone or computer, and
+                your progress is saved locally in your browser.
+              </p>
+            </details>
+            <details>
+              <summary>Can a fake cigarette really help with cravings?</summary>
+              <p>
+                It replaces the ritual, not the chemistry. Cravings come in short waves, and this
+                gives your hands and mind something to ride them out with. For proven quitting
+                support, see{" "}
+                <a href="https://smokefree.gov/" target="_blank" rel="noreferrer">smokefree.gov</a>.
+              </p>
+            </details>
+            <details>
+              <summary>Is it free?</summary>
+              <p>
+                Yes. Some packs unlock by taking breaks, others by watching a short sponsored break.
+                A one-time {SUPPORT_CONFIG.price} Supporter pass unlocks everything instantly and
+                keeps the site running.
+              </p>
+            </details>
+            <details>
+              <summary>Does it listen to my microphone?</summary>
+              <p>
+                Only if you switch mic mode on, and only on your device — audio never leaves your
+                browser. It simply lets your real inhale drive the burn.
+              </p>
+            </details>
+            <details>
+              <summary>Do you collect my data?</summary>
+              <p>
+                No servers, no accounts. Your progress lives in your browser’s local storage. The
+                full details are in the privacy policy, linked below.
+              </p>
+            </details>
+            <details>
+              <summary>Is this medical advice?</summary>
+              <p>
+                No. Fake Break is a playful craving interrupter, not a treatment. For medical help
+                quitting, talk to a professional or visit smokefree.gov.
+              </p>
+            </details>
           </section>
 
           <p className="homeFoot">
