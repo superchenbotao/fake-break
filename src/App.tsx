@@ -422,6 +422,9 @@ export default function Home() {
   const inhaleStartedAt = useRef(0);
   const inhaleProgressRef = useRef(0);
   const inhaleActiveRef = useRef(false);
+  const inhaleGuardTimeout = useRef<number | null>(null);
+  const lastBurnPushRef = useRef(0);
+  const pushedProgressRef = useRef(-1);
   const litRef = useRef(false);
   const burnRef = useRef(0);
   const ashRef = useRef(0);
@@ -638,7 +641,12 @@ export default function Home() {
     const rawDelta = raw - inhaleProgressRef.current;
     const delta = rawDelta * (raw > 100 ? 0.55 : 1);
     inhaleProgressRef.current = raw;
-    setInhaleProgress(next);
+    // Re-render at most once per percent — 60fps text updates starve touch
+    // input on low-end webviews.
+    if (Math.floor(next) !== pushedProgressRef.current) {
+      pushedProgressRef.current = Math.floor(next);
+      setInhaleProgress(next);
+    }
 
     // Live burn: the ember eats the paper and grows the ash frame by frame,
     // so mic-driven pulls visibly smolder while you breathe. When the mic is
@@ -649,10 +657,15 @@ export default function Home() {
         : 1;
       const burnNow = Math.min(96, burnRef.current + delta * 0.14 * breathBoost);
       burnRef.current = burnNow;
-      setBurn(burnNow);
       const ashNow = Math.min(ASH_OVERFLOW, ashRef.current + delta * 0.48 * breathBoost);
       ashRef.current = ashNow;
-      setAsh(ashNow);
+      // Push burn/ash to React at ~12Hz — every-frame whole-app re-renders
+      // starve touch input on low-end webviews.
+      if (time - lastBurnPushRef.current > 80 || burnNow >= 95) {
+        lastBurnPushRef.current = time;
+        setBurn(burnNow);
+        setAsh(ashNow);
+      }
       if (ashNow >= ASH_OVERFLOW) scheduleAshDrop();
       if (burnNow >= 95) {
         extinguishCigarette();
@@ -665,14 +678,20 @@ export default function Home() {
   };
 
   const beginInhale = () => {
-    if (!litRef.current || burnRef.current >= 95 || inhaleActiveRef.current) return;
+    if (!litRef.current || burnRef.current >= 95) return;
+    // A still-active hold here means the webview swallowed the previous
+    // release — reset it instead of deadlocking the button.
+    if (inhaleActiveRef.current) endInhale();
     inhaleActiveRef.current = true;
     inhaleProgressRef.current = 0;
+    pushedProgressRef.current = -1;
     setInhaling(true);
     setInhaleProgress(0);
     inhaleStartedAt.current = performance.now();
     if (!micActiveRef.current) startInhaleSound();
     inhaleFrame.current = requestAnimationFrame(tickInhale);
+    // Absolute cap: even if every release event is lost, the pull ends.
+    inhaleGuardTimeout.current = window.setTimeout(() => endInhale(), 20000);
   };
 
   const performFlick = () => {
@@ -704,6 +723,10 @@ export default function Home() {
   function endInhale(forcedProgress?: number) {
     if (!inhaleActiveRef.current) return;
     inhaleActiveRef.current = false;
+    if (inhaleGuardTimeout.current) {
+      window.clearTimeout(inhaleGuardTimeout.current);
+      inhaleGuardTimeout.current = null;
+    }
     if (inhaleFrame.current) cancelAnimationFrame(inhaleFrame.current);
     inhaleFrame.current = null;
     stopInhaleSound();
@@ -726,29 +749,31 @@ export default function Home() {
     if (!lit) return;
     let frame: number;
     let last = performance.now();
+    let acc = 0;
     let toasted = false;
     const smolder = (now: number) => {
       const dt = Math.min(120, now - last); // clamp tab-switch jumps
       last = now;
       if (litRef.current && !inhaleActiveRef.current) {
-        const burnNow = Math.min(96, burnRef.current + dt * 0.0005); // ~3 min to burn out
-        if (burnNow !== burnRef.current) {
+        acc += dt;
+        // Push to React at ~5Hz — every-frame re-renders starve touch input.
+        if (acc >= 200) {
+          const burnNow = Math.min(96, burnRef.current + acc * 0.0005); // ~3 min to burn out
           burnRef.current = burnNow;
           setBurn(burnNow);
-        }
-        const ashNow = Math.min(ASH_OVERFLOW, ashRef.current + dt * 0.0006);
-        if (ashNow !== ashRef.current) {
+          const ashNow = Math.min(ASH_OVERFLOW, ashRef.current + acc * 0.0006);
           ashRef.current = ashNow;
           setAsh(ashNow);
+          acc = 0;
           if (ashNow >= ASH_OVERFLOW) scheduleAshDrop();
-        }
-        if (burnNow >= 95) {
-          extinguishCigarette();
-          if (!toasted) {
-            toasted = true;
-            showToast("It burned down on its own ☁️");
+          if (burnNow >= 95) {
+            extinguishCigarette();
+            if (!toasted) {
+              toasted = true;
+              showToast("It burned down on its own ☁️");
+            }
+            return;
           }
-          return;
         }
       }
       frame = requestAnimationFrame(smolder);
@@ -757,6 +782,8 @@ export default function Home() {
     return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lit]);
+
+  // Release safety net refs are wired up after endRing is defined below.
 
   function monitorMicrophone() {
     if (!micActiveRef.current || !micAnalyser.current) return;
@@ -921,6 +948,30 @@ export default function Home() {
       ringTimeouts.current.push(timeout);
     });
   };
+
+  // Release safety net: iOS long-press grabs, WeChat overlays and tab
+  // switches can all swallow pointerup. Any of these signals ends the pull
+  // (and the smoke-ring hold), so the controls can never deadlock.
+  const endInhaleRef = useRef(endInhale);
+  endInhaleRef.current = endInhale;
+  const endRingRef = useRef(endRing);
+  endRingRef.current = endRing;
+  useEffect(() => {
+    const release = () => {
+      if (inhaleActiveRef.current) endInhaleRef.current();
+      if (ringStartedAt.current) endRingRef.current();
+    };
+    window.addEventListener("pointerup", release);
+    window.addEventListener("pointercancel", release);
+    window.addEventListener("blur", release);
+    document.addEventListener("visibilitychange", release);
+    return () => {
+      window.removeEventListener("pointerup", release);
+      window.removeEventListener("pointercancel", release);
+      window.removeEventListener("blur", release);
+      document.removeEventListener("visibilitychange", release);
+    };
+  }, []);
 
   function resetRitual() {
     inhaleActiveRef.current = false;
@@ -1972,7 +2023,6 @@ export default function Home() {
                 }}
                 onPointerUp={endRing}
                 onPointerCancel={endRing}
-                onLostPointerCapture={endRing}
               >
                 <i>◎</i>
                 <span>{exhaling ? "Hold it…" : ringCount > 0 ? `Rings ×${ringCount}` : "Smoke rings"}</span>
@@ -2026,7 +2076,6 @@ export default function Home() {
               }}
               onPointerUp={() => endInhale()}
               onPointerCancel={() => endInhale()}
-              onLostPointerCapture={() => endInhale()}
               onKeyDown={(event) => {
                 if ((event.key === " " || event.key === "Enter") && !event.repeat) {
                   if (!litRef.current && burnRef.current < 95) lightCigarette();
@@ -2048,11 +2097,15 @@ export default function Home() {
                     ? `Pulling ${Math.round(inhaleProgress)}%`
                     : "Hold to inhale"}
             </button>
-            {puffs > 0 && (
-              <button type="button" className="finishButton" onClick={finishSession}>
-                Done · keep the win
-              </button>
-            )}
+            <button
+              type="button"
+              className="finishButton"
+              onClick={finishSession}
+              style={{ visibility: puffs > 0 ? "visible" : "hidden" }}
+              tabIndex={puffs > 0 ? 0 : -1}
+            >
+              Done · keep the win
+            </button>
             <p className="microcopy">No tobacco · no nicotine · sound &amp; mic stay on your device</p>
           </div>
         </div>
