@@ -2461,3 +2461,26 @@ button {
   border-bottom: 1px dotted #8f8981;
 }
 .legalLinks button:hover { color: var(--acid); border-bottom-color: var(--acid); }
+
+/* ============ TOUCH POLISH ============ */
+
+/* the cigarette owns vertical drags (ash-flick swipe) — never let the page steal them */
+.cigarette {
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
+
+/* tactile press feedback everywhere — phones have no hover, this is the hover */
+.packCard:active:not(.locked) { transform: translateY(-2px) scale(.985); }
+.bigCta:active { transform: scale(.975); }
+.rescueCta:active { transform: scale(.97); }
+.sheetAction:active, .supporterAction:active, .adClaim:active { transform: scale(.97); }
+.finishButton:active { transform: scale(.97); }
+.packBox:active { filter: brightness(1.06); }
+.sceneChip:active, .backChip:active { transform: scale(.94); }
+
+/* inhale button presses should feel like the thing breathes back */
+.startButton:not(:disabled):active {
+  transform: scale(.965);
+  box-shadow: 0 8px 26px rgba(255, 120, 40, .34);
+}

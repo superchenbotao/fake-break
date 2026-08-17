@@ -439,6 +439,7 @@ export default function Home() {
   const micStream = useRef<MediaStream | null>(null);
   const micSource = useRef<MediaStreamAudioSourceNode | null>(null);
   const micAnalyser = useRef<AnalyserNode | null>(null);
+  const micLevelLiveRef = useRef(0); // raw RMS, read by the burn loop
   const completedRef = useRef(false);
   const foilDragY = useRef<number | null>(null);
   const cigPointer = useRef<{ y: number; time: number } | null>(null);
@@ -633,12 +634,16 @@ export default function Home() {
     setInhaleProgress(next);
 
     // Live burn: the ember eats the paper and grows the ash frame by frame,
-    // so mic-driven pulls visibly smolder while you breathe.
+    // so mic-driven pulls visibly smolder while you breathe. When the mic is
+    // live, burn speed follows how hard you actually breathe.
     if (delta > 0) {
-      const burnNow = Math.min(96, burnRef.current + delta * 0.14);
+      const breathBoost = micActiveRef.current
+        ? Math.min(2.1, 0.55 + micLevelLiveRef.current * 16)
+        : 1;
+      const burnNow = Math.min(96, burnRef.current + delta * 0.14 * breathBoost);
       burnRef.current = burnNow;
       setBurn(burnNow);
-      const ashNow = Math.min(ASH_OVERFLOW, ashRef.current + delta * 0.48);
+      const ashNow = Math.min(ASH_OVERFLOW, ashRef.current + delta * 0.48 * breathBoost);
       ashRef.current = ashNow;
       setAsh(ashNow);
       if (ashNow >= ASH_OVERFLOW) scheduleAshDrop();
@@ -720,18 +725,19 @@ export default function Home() {
     let total = 0;
     for (const sample of samples) total += sample * sample;
     const level = Math.sqrt(total / samples.length);
+    micLevelLiveRef.current = level;
 
     // Adaptive noise floor with hysteresis: learn the room while idle, then
     // trigger just above it — a faint breath in a quiet room still counts.
-    const trigger = Math.max(0.012, noiseFloorRef.current * 2.4);
-    const release = Math.max(0.009, noiseFloorRef.current * 1.5);
+    const trigger = Math.max(0.0075, noiseFloorRef.current * 1.8);
+    const release = Math.max(0.0055, noiseFloorRef.current * 1.25);
     if (!inhaleActiveRef.current && level < trigger) {
       const drift = noiseFloorRef.current + (level - noiseFloorRef.current) * 0.04;
       noiseFloorRef.current = Math.min(0.05, Math.max(0.004, drift));
     }
 
     // Perceptual meter curve keeps small signals visible instead of pinned at 0.
-    const visualLevel = Math.min(100, Math.round(Math.pow(Math.min(1, level * 22), 0.55) * 100));
+    const visualLevel = Math.min(100, Math.round(Math.pow(Math.min(1, level * 32), 0.5) * 100));
     setMicLevel(visualLevel);
 
     if (inhaleActiveRef.current) {
@@ -751,6 +757,7 @@ export default function Home() {
     micStream.current = null;
     micSource.current = null;
     micAnalyser.current = null;
+    micLevelLiveRef.current = 0;
     if (inhaleActiveRef.current) endInhale();
     setMicOn(false);
     setMicLevel(0);
@@ -1798,7 +1805,7 @@ export default function Home() {
                     "--ash-opacity": ash >= ASH_VISIBLE_THRESHOLD ? Math.min(1, ash / 12) : 0,
                     "--ash-tilt": `${Math.min(3.4, ash * 0.034)}deg`,
                     "--ash-progress": Math.min(1, ash / 100),
-                    "--ei": !lit ? 0 : inhaling ? 1 : micOn ? Math.min(1, 0.25 + micLevel / 55) : 0.32,
+                    "--ei": !lit ? 0 : inhaling ? 1 : micOn ? Math.min(1, 0.2 + micLevel / 42) : 0.32,
                     "--cig-paper": activePack.paperTint,
                     "--cig-filter": activePack.filterColor,
                     "--cig-band": activePack.bandColor,
