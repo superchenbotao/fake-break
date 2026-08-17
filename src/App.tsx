@@ -638,7 +638,7 @@ export default function Home() {
     // live, burn speed follows how hard you actually breathe.
     if (delta > 0) {
       const breathBoost = micActiveRef.current
-        ? Math.min(2.1, 0.55 + micLevelLiveRef.current * 16)
+        ? Math.min(2.4, 0.55 + micLevelLiveRef.current * 20)
         : 1;
       const burnNow = Math.min(96, burnRef.current + delta * 0.14 * breathBoost);
       burnRef.current = burnNow;
@@ -729,15 +729,15 @@ export default function Home() {
 
     // Adaptive noise floor with hysteresis: learn the room while idle, then
     // trigger just above it — a faint breath in a quiet room still counts.
-    const trigger = Math.max(0.0075, noiseFloorRef.current * 1.8);
-    const release = Math.max(0.0055, noiseFloorRef.current * 1.25);
+    const trigger = Math.max(0.006, noiseFloorRef.current * 1.6);
+    const release = Math.max(0.0045, noiseFloorRef.current * 1.15);
     if (!inhaleActiveRef.current && level < trigger) {
       const drift = noiseFloorRef.current + (level - noiseFloorRef.current) * 0.04;
       noiseFloorRef.current = Math.min(0.05, Math.max(0.004, drift));
     }
 
     // Perceptual meter curve keeps small signals visible instead of pinned at 0.
-    const visualLevel = Math.min(100, Math.round(Math.pow(Math.min(1, level * 32), 0.5) * 100));
+    const visualLevel = Math.min(100, Math.round(Math.pow(Math.min(1, level * 45), 0.45) * 100));
     setMicLevel(visualLevel);
 
     if (inhaleActiveRef.current) {
@@ -779,7 +779,7 @@ export default function Home() {
       const source = context.createMediaStreamSource(stream);
       const analyser = context.createAnalyser();
       analyser.fftSize = 512;
-      analyser.smoothingTimeConstant = 0.2;
+      analyser.smoothingTimeConstant = 0.12;
       source.connect(analyser);
       micStream.current = stream;
       micSource.current = source;
@@ -1805,7 +1805,7 @@ export default function Home() {
                     "--ash-opacity": ash >= ASH_VISIBLE_THRESHOLD ? Math.min(1, ash / 12) : 0,
                     "--ash-tilt": `${Math.min(3.4, ash * 0.034)}deg`,
                     "--ash-progress": Math.min(1, ash / 100),
-                    "--ei": !lit ? 0 : inhaling ? 1 : micOn ? Math.min(1, 0.2 + micLevel / 42) : 0.32,
+                    "--ei": !lit ? 0 : inhaling ? 1 : micOn ? Math.min(1, 0.18 + micLevel / 36) : 0.32,
                     "--cig-paper": activePack.paperTint,
                     "--cig-filter": activePack.filterColor,
                     "--cig-band": activePack.bandColor,
@@ -1813,7 +1813,7 @@ export default function Home() {
                 }
               >
                 <span className="flame" />
-                <span className="wisps" aria-hidden="true"><i /><i /><i /></span>
+                <span className="wisps" aria-hidden="true"><i /><i /><i /><i /></span>
                 <span className="ashCap"><i /></span>
                 {flicking && (
                   <span className="ashBurst" aria-hidden="true">
