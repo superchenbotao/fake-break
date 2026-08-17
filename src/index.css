@@ -574,8 +574,12 @@ button { color: inherit; }
 .ritualRail button:hover:not(:disabled) i { border-color: var(--pack-glow); }
 .ritualRail button.railOn i {
   border-color: var(--pack-glow);
-  background: color-mix(in srgb, var(--pack) 30%, #14110d);
-  box-shadow: 0 0 24px color-mix(in srgb, var(--pack-glow) 26%, transparent);
+  background:
+    radial-gradient(circle at 35% 28%, color-mix(in srgb, var(--pack-glow) 30%, transparent), transparent 62%),
+    color-mix(in srgb, var(--pack) 30%, #14110d);
+  box-shadow:
+    0 0 24px color-mix(in srgb, var(--pack-glow) 26%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, .16);
 }
 .ritualRail button:disabled { opacity: .32; cursor: not-allowed; }
 
@@ -2283,13 +2287,32 @@ button {
   padding: 12px 20px;
   border: 1px solid rgba(255, 217, 138, 0.3);
   border-radius: 99px;
-  background: rgba(22, 19, 16, 0.94);
+  background: rgba(22, 19, 16, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: #e8dfca;
   font-size: 13px;
   white-space: nowrap;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   animation: sheetUp 0.28s cubic-bezier(0.2, 0.9, 0.3, 1) both;
   pointer-events: none;
+}
+
+/* mic listening state: breathing ring that swells with live input */
+.ritualRail button.micLive.railOn i {
+  animation: micPulse 1.7s ease-in-out infinite;
+}
+@keyframes micPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 calc(6px + var(--ml, 0) * 26px) color-mix(in srgb, var(--pack-glow) 45%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, .16);
+  }
+  50% {
+    box-shadow:
+      0 0 calc(16px + var(--ml, 0) * 34px) color-mix(in srgb, var(--pack-glow) 72%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, .2);
+  }
 }
 
 

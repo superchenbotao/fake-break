@@ -781,8 +781,10 @@ export default function Home() {
       noiseFloorRef.current = 0.015;
       setMicOn(true);
       monitorMicrophone();
+      if (!litRef.current) showToast("Mic live — light it and breathe 🎙");
     } catch {
       setMicError("Mic blocked — hold the button instead.");
+      showToast("Mic blocked — check the browser permission 🔒");
     }
   };
 
@@ -1838,7 +1840,7 @@ export default function Home() {
                 className={`micLive ${micOn ? "railOn" : ""}`}
                 style={{ "--ml": micLevel / 100 } as CSSProperties}
                 onClick={toggleMicrophone}
-                disabled={!lit || burn >= 95}
+                disabled={burn >= 95}
                 aria-pressed={micOn}
               >
                 <i>🎙</i>
