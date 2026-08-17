@@ -7,6 +7,7 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { ASH_VISIBLE_THRESHOLD, getAttachedAshHeightPx, getBurnOffsetPx } from "./ashPhysics";
 import { AD_CONFIG, HOUSE_ADS, SUPPORT_CONFIG, type UnlockRule } from "./monetization";
 
 type Pack = {
@@ -392,6 +393,8 @@ export default function Home() {
   const [inhaleProgress, setInhaleProgress] = useState(0);
   const [burn, setBurn] = useState(0);
   const [ash, setAsh] = useState(0);
+  const [ashAnchorBurn, setAshAnchorBurn] = useState(0);
+  const [flickAshHeight, setFlickAshHeight] = useState(0);
   const [ashDropped, setAshDropped] = useState(false);
   const [puffs, setPuffs] = useState(0);
   const [ringCount, setRingCount] = useState(0);
@@ -423,6 +426,8 @@ export default function Home() {
   const burnRef = useRef(0);
   const ashRef = useRef(0);
   const ashDropPendingRef = useRef(false);
+  const ashDropTimeoutRef = useRef<number | null>(null);
+  const flickingRef = useRef(false);
   const noiseFloorRef = useRef(0.015);
   const ringStartedAt = useRef(0);
   const ringId = useRef(0);
@@ -610,11 +615,13 @@ export default function Home() {
     if (ashDropPendingRef.current) return;
     ashDropPendingRef.current = true;
     const dropTimeout = window.setTimeout(() => {
+      ashDropTimeoutRef.current = null;
       setAshDropped(true);
       performFlick();
       const clearTimeoutId = window.setTimeout(() => setAshDropped(false), 2400);
       ringTimeouts.current.push(clearTimeoutId);
     }, 620);
+    ashDropTimeoutRef.current = dropTimeout;
     ringTimeouts.current.push(dropTimeout);
   };
 
@@ -661,15 +668,28 @@ export default function Home() {
   };
 
   const performFlick = () => {
+    if (ashRef.current < ASH_VISIBLE_THRESHOLD || flickingRef.current) return;
+    if (ashDropTimeoutRef.current !== null) {
+      window.clearTimeout(ashDropTimeoutRef.current);
+      ashDropTimeoutRef.current = null;
+    }
+    flickingRef.current = true;
+    setFlickAshHeight(
+      getAttachedAshHeightPx(burnRef.current, ashAnchorBurn, ashRef.current),
+    );
     setFlicking(true);
     setAsh(0);
     ashRef.current = 0;
+    setAshAnchorBurn(burnRef.current);
     ashDropPendingRef.current = false;
     setTotalFlicks((current) => current + 1);
     playNoise(0.11, 0.085, 5200);
     playTone(150, 0.1, 0.04, 90);
     if (navigator.vibrate) navigator.vibrate([18, 25, 18]);
-    const timeout = window.setTimeout(() => setFlicking(false), 620);
+    const timeout = window.setTimeout(() => {
+      flickingRef.current = false;
+      setFlicking(false);
+    }, 620);
     ringTimeouts.current.push(timeout);
   };
 
@@ -767,7 +787,6 @@ export default function Home() {
   };
 
   const flickAsh = () => {
-    if (ash < 5 || flicking) return;
     performFlick();
   };
 
@@ -821,6 +840,8 @@ export default function Home() {
     setInhaleProgress(0);
     setBurn(0);
     setAsh(0);
+    setAshAnchorBurn(0);
+    setFlickAshHeight(0);
     setAshDropped(false);
     setPuffs(0);
     setRingCount(0);
@@ -830,6 +851,14 @@ export default function Home() {
     stopMicrophone();
     setShared(false);
     completedRef.current = false;
+    burnRef.current = 0;
+    ashRef.current = 0;
+    ashDropPendingRef.current = false;
+    flickingRef.current = false;
+    if (ashDropTimeoutRef.current !== null) {
+      window.clearTimeout(ashDropTimeoutRef.current);
+      ashDropTimeoutRef.current = null;
+    }
   }
 
   const finishSession = () => {
@@ -1098,6 +1127,8 @@ export default function Home() {
 
   const effectiveTodayCount = lastDate === today ? todayCount : 0;
   const ashRounded = Math.round(ash);
+  const burnOffsetPx = getBurnOffsetPx(burn);
+  const attachedAshHeightPx = getAttachedAshHeightPx(burn, ashAnchorBurn, ash);
 
   const sessionClock = `${String(Math.floor(sessionSeconds / 60)).padStart(1, "0")}:${String(sessionSeconds % 60).padStart(2, "0")}`;
   const cravingPhase =
@@ -1734,13 +1765,6 @@ export default function Home() {
                   <i key={index} />
                 ))}
               </div>
-              {flicking && (
-                <div className="ashBurst">
-                  {Array.from({ length: 7 }, (_, index) => (
-                    <i key={index} />
-                  ))}
-                </div>
-              )}
               <div className="ashtray" />
               <button
                 type="button"
@@ -1767,10 +1791,11 @@ export default function Home() {
                 }
                 style={
                   {
-                    "--burn-offset": `${burn * 1.6}px`,
-                    "--ash-height": `${Math.min(58, 8 + ash * 0.48)}px`,
-                    "--ash-opacity": ash >= 5 ? 1 : 0,
-                    "--ash-tilt": ash >= 70 ? "4.5deg" : "0deg",
+                    "--burn-offset": `${burnOffsetPx}px`,
+                    "--ash-height": `${flicking ? flickAshHeight : attachedAshHeightPx}px`,
+                    "--ash-opacity": ash >= ASH_VISIBLE_THRESHOLD ? Math.min(1, ash / 12) : 0,
+                    "--ash-tilt": `${Math.min(3.4, ash * 0.034)}deg`,
+                    "--ash-progress": Math.min(1, ash / 100),
                     "--ei": !lit ? 0 : inhaling ? 1 : micOn ? Math.min(1, 0.25 + micLevel / 55) : 0.32,
                     "--cig-paper": activePack.paperTint,
                     "--cig-filter": activePack.filterColor,
@@ -1781,6 +1806,13 @@ export default function Home() {
                 <span className="flame" />
                 <span className="wisps" aria-hidden="true"><i /><i /><i /></span>
                 <span className="ashCap"><i /></span>
+                {flicking && (
+                  <span className="ashBurst" aria-hidden="true">
+                    {Array.from({ length: 7 }, (_, index) => (
+                      <i key={index} />
+                    ))}
+                  </span>
+                )}
                 <span className="charLine" />
                 <span className="ember" />
                 <span className="paper"><b>{activePack.stick}</b></span>
