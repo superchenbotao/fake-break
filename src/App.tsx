@@ -785,6 +785,18 @@ export default function Home() {
       return;
     }
     setMicError("");
+    // In-app browsers (WeChat, Facebook, TikTok…) often hide mediaDevices
+    // entirely, so no permission prompt can ever appear. Detect that up
+    // front and tell the user exactly what to do instead of failing mutely.
+    if (!navigator.mediaDevices?.getUserMedia) {
+      const inApp = /MicroMessenger|FBAN|FBAV|Instagram|Line\/|TikTok|Musical_ly/i.test(navigator.userAgent);
+      const message = inApp
+        ? "This in-app browser blocks the mic — open Fake Break in Safari/Chrome 🎙"
+        : "This browser can't use the mic — hold the button instead.";
+      setMicError(message);
+      showToast(message);
+      return;
+    }
     try {
       // Some mobile browsers (notably iOS Safari) reject exact DSP
       // constraints — fall back to a plain audio request before giving up.
@@ -815,9 +827,14 @@ export default function Home() {
       setMicOn(true);
       monitorMicrophone();
       if (!litRef.current) showToast("Mic live — light it and breathe 🎙");
-    } catch {
-      setMicError("Mic blocked — hold the button instead.");
-      showToast("Mic blocked — check the browser permission 🔒");
+    } catch (error) {
+      const denied = error instanceof DOMException &&
+        (error.name === "NotAllowedError" || error.name === "SecurityError");
+      const message = denied
+        ? "Mic permission denied — tap the 🔒 in the address bar to allow it"
+        : "Mic unavailable here — hold the button instead.";
+      setMicError(message);
+      showToast(message);
     }
   };
 
@@ -1881,9 +1898,14 @@ export default function Home() {
               </button>
               <button
                 type="button"
-                className={ash >= 70 ? "ashReady" : ""}
-                onClick={flickAsh}
-                disabled={ash < 5}
+                className={`${ash >= 70 ? "ashReady" : ""} ${ash < 5 ? "railDim" : ""}`}
+                onClick={() => {
+                  if (ashRef.current < ASH_VISIBLE_THRESHOLD) {
+                    showToast("Ash is still short — take a pull first 🚬");
+                    return;
+                  }
+                  flickAsh();
+                }}
               >
                 <i
                   style={{
@@ -1896,19 +1918,37 @@ export default function Home() {
               </button>
               <button
                 type="button"
-                className={exhaling ? "railOn" : ""}
+                className={`${exhaling ? "railOn" : ""} ${puffs === 0 ? "railDim" : ""}`}
                 onPointerDown={(event) => {
-                  event.currentTarget.setPointerCapture(event.pointerId);
+                  if (puffs === 0) {
+                    showToast("Take a pull first — then blow rings ◎");
+                    return;
+                  }
+                  try {
+                    event.currentTarget.setPointerCapture(event.pointerId);
+                  } catch {
+                    // synthetic or already-released pointers cannot be captured
+                  }
                   beginRing();
                 }}
                 onPointerUp={endRing}
                 onPointerCancel={endRing}
-                disabled={puffs === 0}
+                onLostPointerCapture={endRing}
               >
                 <i>◎</i>
                 <span>{exhaling ? "Hold it…" : ringCount > 0 ? `Rings ×${ringCount}` : "Smoke rings"}</span>
               </button>
-              <button type="button" onClick={shareResult} disabled={puffs === 0}>
+              <button
+                type="button"
+                className={puffs === 0 ? "railDim" : ""}
+                onClick={() => {
+                  if (puffs === 0) {
+                    showToast("Take a pull first — then pass it on ↗");
+                    return;
+                  }
+                  shareResult();
+                }}
+              >
                 <i>↗</i>
                 <span>{shared ? "Passed ✓" : "Pass it on"}</span>
               </button>

@@ -2692,3 +2692,8 @@ button {
   40% { opacity: .95; }
   100% { transform: translateY(-34%); opacity: .15; }
 }
+
+/* rail buttons stay tappable even before their action is ready — a dead
+   button feels broken on touch, a dimmed one with a toast explains itself */
+.ritualRail button.railDim { opacity: .45; }
+.ritualRail button.railDim:active { transform: scale(.94); }
