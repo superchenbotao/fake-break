@@ -626,7 +626,7 @@ button { color: inherit; }
   border-radius: 9px 9px 0 0;
   background: repeating-linear-gradient(90deg, #f2efe8 0 7px, #e6e0d5 8px, #faf8f1 10px);
   box-shadow: inset 0 0 0 1px rgba(54, 47, 39, .12);
-  transition: height .2s ease, margin-top .2s ease;
+  will-change: height, margin-top;
 }
 .paper b {
   position: absolute;
@@ -703,21 +703,61 @@ button { color: inherit; }
 .ashCap {
   position: absolute;
   z-index: 4;
-  left: 7%;
-  top: calc(var(--burn-offset, 0px) - var(--ash-height, 8px) - 6px);
-  width: 86%;
-  height: var(--ash-height, 8px);
+  left: 8%;
+  top: calc(var(--burn-offset, 0px) - var(--ash-height, 0px));
+  width: 84%;
+  height: var(--ash-height, 0px);
   opacity: var(--ash-opacity, 0);
-  border-radius: 6px 6px 3px 3px;
+  overflow: visible;
+  border-radius: 42% 48% 27% 31% / 24% 31% 16% 20%;
+  clip-path: polygon(5% 12%, 18% 3%, 32% 8%, 46% 0, 61% 7%, 76% 2%, 94% 12%, 100% 36%, 96% 100%, 6% 100%, 0 70%);
   background:
-    radial-gradient(circle at 25% 25%, #c9c3ba 0 1px, transparent 1.5px),
-    radial-gradient(circle at 70% 60%, #45413e 0 1.5px, transparent 2px),
-    linear-gradient(90deg, #56514d, #b8b0a5 48%, #4c4845);
-  background-size: 7px 7px, 9px 9px, auto;
+    radial-gradient(circle at 19% 24%, rgba(244, 240, 232, .9) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 72% 61%, rgba(42, 39, 36, .9) 0 1.4px, transparent 2.2px),
+    radial-gradient(circle at 48% 38%, rgba(31, 29, 27, .75) 0 1px, transparent 1.8px),
+    repeating-linear-gradient(104deg, transparent 0 8px, rgba(35, 32, 29, .42) 9px 10px, transparent 11px 15px),
+    linear-gradient(90deg, #45413d 0%, #9a958e 20%, #c4beb5 43%, #76716b 61%, #b8b2aa 78%, #403d39 100%);
+  background-size: 8px 8px, 11px 10px, 13px 12px, auto, auto;
+  box-shadow:
+    inset 0 -4px 4px rgba(24, 21, 19, .72),
+    inset 3px 0 4px rgba(255, 255, 255, .12),
+    0 -1px 2px rgba(218, 213, 204, .22);
+  filter: contrast(1.08) saturate(.55);
   transform-origin: center bottom;
-  transition: height .2s ease, top .2s ease, opacity .2s ease;
+  transition: opacity .1s linear, transform .22s ease;
+  will-change: top, height;
 }
-.ashCap i { position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 -4px 4px rgba(0, 0, 0, .35); }
+.ashCap::before {
+  content: "";
+  position: absolute;
+  left: 3%;
+  right: 2%;
+  bottom: -2px;
+  height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #2b211b 0 46%, #7f3f1e 58%, transparent 72%);
+  box-shadow: 0 1px 3px rgba(255, 91, 28, calc(.08 + var(--ash-progress, 0) * .18));
+}
+.ashCap::after {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 29%;
+  width: 6px;
+  height: 7px;
+  border-radius: 48% 52% 60% 40%;
+  background: #8f8a83;
+  box-shadow: 66px 3px 0 -1px #5e5a55, 49px -4px 0 -2px #c1bbb2;
+  opacity: calc(.25 + var(--ash-progress, 0) * .7);
+}
+.ashCap i {
+  position: absolute;
+  inset: 2px 5px 3px;
+  background:
+    linear-gradient(72deg, transparent 0 39%, rgba(39, 36, 33, .66) 41% 43%, transparent 45%),
+    linear-gradient(118deg, transparent 0 58%, rgba(54, 50, 46, .58) 60% 62%, transparent 64%);
+  opacity: calc(.3 + var(--ash-progress, 0) * .65);
+}
 .isFlicking .ashCap { animation: flickAsh .52s ease both; }
 .isFlicking .cigarette { animation: cigaretteTap .28s ease 2; }
 
@@ -1202,8 +1242,8 @@ button { color: inherit; }
 }
 .filter { border-top: 3px solid var(--cig-band, #d8b96a); }
 
-/* ash cap droops when it gets long */
-.ashCap { transform: rotate(var(--ash-tilt, 0deg)); transition: height .2s ease, top .2s ease, opacity .2s ease, transform .45s ease; }
+/* The cluster droops as it loosens, but its position stays locked to the live burn front. */
+.ashCap { transform: rotate(var(--ash-tilt, 0deg)); }
 
 /* flick rail button: ash progress ring + pulse when long */
 .ritualRail button i { transition: border-color .2s ease, box-shadow .2s ease, background .2s ease, transform .2s ease; }
@@ -1218,7 +1258,9 @@ button { color: inherit; }
   position: absolute;
   z-index: 6;
   left: 50%;
-  top: 24%;
+  top: calc(var(--burn-offset, 0px) - 2px);
+  width: 0;
+  height: 0;
   pointer-events: none;
 }
 .ashBurst i {
