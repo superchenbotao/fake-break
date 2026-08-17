@@ -9,6 +9,7 @@ import {
 } from "react";
 import { ASH_VISIBLE_THRESHOLD, getAttachedAshHeightPx, getBurnOffsetPx } from "./ashPhysics";
 import { AD_CONFIG, HOUSE_ADS, SUPPORT_CONFIG, type UnlockRule } from "./monetization";
+import { flushSync } from "react-dom";
 
 type Pack = {
   id: string;
@@ -1067,20 +1068,38 @@ export default function Home() {
   const startUnbox = (packId: string) => {
     setSelectedPackId(packId);
     setUnboxOpen(false);
-    setView("unbox");
+    navigate("unbox");
+  };
+
+  // ---------- View transitions ----------
+
+  // Direction-aware page transitions: View Transitions API where available,
+  // a CSS enter animation elsewhere, nothing when reduced motion is wanted.
+  const navigate = (next: View, options?: { back?: boolean }) => {
+    if (next === view) return;
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const startViewTransition = (document as Document & {
+      startViewTransition?: (update: () => void) => unknown;
+    }).startViewTransition;
+    if (!startViewTransition || reduceMotion) {
+      setView(next);
+      return;
+    }
+    document.documentElement.dataset.navDir = options?.back ? "back" : "fwd";
+    startViewTransition.call(document, () => flushSync(() => setView(next)));
   };
 
   // ---------- Legal pages (?page=privacy|about keeps real URLs for review) ----------
 
   const openPage = (page: "privacy" | "about") => {
     window.history.pushState(null, "", `?page=${page}`);
-    setView(page);
+    navigate(page);
     window.scrollTo(0, 0);
   };
 
   const closePage = () => {
     window.history.pushState(null, "", window.location.pathname);
-    setView("home");
+    navigate("home", { back: true });
     window.scrollTo(0, 0);
   };
 
@@ -1235,7 +1254,7 @@ export default function Home() {
     }));
     resetRitual();
     setMicError("");
-    setView("ritual");
+    navigate("ritual");
   };
 
   const refillPack = () => {
@@ -1247,7 +1266,7 @@ export default function Home() {
   const quitRitual = () => {
     resetRitual();
     setCompleted(false);
-    setView("home");
+    navigate("home", { back: true });
   };
 
   // ---------- Derived data ----------
@@ -1341,7 +1360,7 @@ export default function Home() {
             </h1>
           </header>
 
-          <button type="button" className="bigCta" onClick={() => setView("packs")}>
+          <button type="button" className="bigCta" onClick={() => navigate("packs")}>
             <span className="ctaIcon" aria-hidden="true">🚬</span>
             <span>
               <strong>Take one</strong>
@@ -1702,7 +1721,7 @@ export default function Home() {
       {view === "packs" && (
         <div className="packsView">
           <header className="packsHeader">
-            <button type="button" className="backButton" onClick={() => setView("home")}>
+            <button type="button" className="backButton" onClick={() => navigate("home", { back: true })}>
               ‹ Back
             </button>
             <h1>Pick one.</h1>
@@ -1750,7 +1769,7 @@ export default function Home() {
       {view === "unbox" && (
         <div className="unboxView">
           <header className="packsHeader">
-            <button type="button" className="backButton" onClick={() => setView("packs")}>
+            <button type="button" className="backButton" onClick={() => navigate("packs", { back: true })}>
               ‹ Switch pack
             </button>
           </header>
