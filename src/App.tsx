@@ -851,16 +851,45 @@ export default function Home() {
 
   const shareResult = async () => {
     const text = `Passing you a smoke-free break: ${puffs} fake pulls, ${ringCount} smoke rings, 0 real cigarettes. Your turn. #FakeBreak`;
+    const url = location.href;
+    // Clipboard first — a tangible result even when the share sheet can't open.
+    let copied = false;
     try {
-      if (navigator.share) {
-        await navigator.share({ title: "My Fake Break receipt", text, url: location.href });
-      } else {
-        await navigator.clipboard.writeText(`${text} ${location.href}`);
+      await navigator.clipboard.writeText(`${text} ${url}`);
+      copied = true;
+    } catch {
+      try {
+        const area = document.createElement("textarea");
+        area.value = `${text} ${url}`;
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+        document.body.appendChild(area);
+        area.select();
+        copied = document.execCommand("copy");
+        area.remove();
+      } catch {
+        // No clipboard on this device at all.
       }
+    }
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "My Fake Break receipt", text, url });
+        setShared(true);
+        setShares((current) => current + 1);
+        showToast("Passed! ✨");
+        return;
+      } catch (error) {
+        // The user dismissing the sheet is a deliberate choice — stay quiet.
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        // The sheet itself failed (common on desktop) — fall through to clipboard.
+      }
+    }
+    if (copied) {
       setShared(true);
       setShares((current) => current + 1);
-    } catch {
-      // A cancelled share leaves the result intact.
+      showToast("Link copied — paste it anywhere ✨");
+    } else {
+      showToast("Couldn't share automatically — copy the address bar link");
     }
   };
 

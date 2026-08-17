@@ -1688,7 +1688,7 @@ body {
 
 /* ============ SHORT-SCREEN RAIL FIT ============ */
 
-.ritualSide { z-index: 3; }
+.ritualSide { z-index: 5; } /* above .stageRow (z-3) so rail chips stay tappable */
 
 @media (max-height: 820px) {
   .ritualRail { top: 132px; bottom: 265px; gap: 8px; }
