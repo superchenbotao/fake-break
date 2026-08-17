@@ -1201,16 +1201,26 @@ export default function Home() {
   };
 
   const handleFoilDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
+    // No pointer capture (iOS/WeChat stuck-capture bug) — track the drag on
+    // window listeners instead so moving off the foil still tracks.
     foilDragY.current = event.clientY;
-  };
-
-  const handleFoilMove = (event: ReactPointerEvent<HTMLButtonElement>) => {
-    if (foilDragY.current === null) return;
-    if (event.clientY - foilDragY.current > 60) {
+    const onMove = (move: PointerEvent) => {
+      if (foilDragY.current === null) return;
+      if (move.clientY - foilDragY.current > 60) {
+        foilDragY.current = null;
+        window.removeEventListener("pointermove", onMove);
+        tearFoil();
+      }
+    };
+    const onUp = () => {
       foilDragY.current = null;
-      tearFoil();
-    }
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
   };
 
   const handleFoilUp = () => {
@@ -1797,7 +1807,6 @@ export default function Home() {
                 className={`packFoil ${unboxOpen ? "torn" : ""}`}
                 onClick={tearFoil}
                 onPointerDown={handleFoilDown}
-                onPointerMove={handleFoilMove}
                 onPointerUp={handleFoilUp}
                 onPointerCancel={handleFoilUp}
                 disabled={unboxOpen}
@@ -2009,16 +2018,13 @@ export default function Home() {
               <button
                 type="button"
                 className={`${exhaling ? "railOn" : ""} ${puffs === 0 ? "railDim" : ""}`}
-                onPointerDown={(event) => {
+                onPointerDown={() => {
                   if (puffs === 0) {
                     showToast("Take a pull first — then blow rings ◎");
                     return;
                   }
-                  try {
-                    event.currentTarget.setPointerCapture(event.pointerId);
-                  } catch {
-                    // synthetic or already-released pointers cannot be captured
-                  }
+                  // No pointer capture — see startButton; the window-level
+                  // release net ends the ring hold instead.
                   beginRing();
                 }}
                 onPointerUp={endRing}
@@ -2061,13 +2067,11 @@ export default function Home() {
             <button
               className="startButton"
               type="button"
-              onPointerDown={(event) => {
-                event.preventDefault();
-                try {
-                  event.currentTarget.setPointerCapture(event.pointerId);
-                } catch {
-                  // synthetic or already-released pointers cannot be captured
-                }
+              onPointerDown={() => {
+                // No setPointerCapture here: on iOS/WeChat webviews a stuck
+                // capture silently retargets ALL later touches to this
+                // button, killing every other control. The window-level
+                // release net already guarantees the pull ends.
                 if (!litRef.current && burnRef.current < 95) {
                   lightCigarette();
                   return;
