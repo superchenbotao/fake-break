@@ -10,6 +10,12 @@
  *   2452943 — home view footer
  *   2452944 — packs view footer
  *   2452945 — rewarded ad-break overlay (below the house creative)
+ *   2452946 — session result card
+ *   2452947 — unbox view
+ *   2452948 — privacy page
+ *   2452949 — about page
+ * The ritual stage itself stays ad-free: banners there would cover the
+ * controls and break the immersion that drives retention and shares.
  *
  * The unit is a plain cross-origin iframe (A-Ads' official embed), so it
  * cannot touch our DOM, storage, or microphone. We render it only on the

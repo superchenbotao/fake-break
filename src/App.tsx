@@ -1654,6 +1654,8 @@ export default function Home() {
               .
             </p>
           </section>
+
+          <AdBanner unitId="2452948" />
         </div>
       )}
 
@@ -1723,6 +1725,8 @@ export default function Home() {
               .
             </p>
           </section>
+
+          <AdBanner unitId="2452949" />
         </div>
       )}
 
@@ -1857,6 +1861,7 @@ export default function Home() {
                 : "Pull the foil down · or just tap it"}
             </p>
           )}
+          <AdBanner unitId="2452947" />
         </div>
       )}
 
@@ -2196,6 +2201,7 @@ export default function Home() {
             >
               Back to your stats
             </button>
+            <AdBanner unitId="2452946" />
           </section>
         </div>
       )}

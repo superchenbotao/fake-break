@@ -338,6 +338,20 @@ button { color: inherit; }
 }
 .adBreak .adBannerLabel { margin-bottom: 6px; }
 .adBreak .adBannerFrame iframe { min-height: 60px; }
+
+/* Compact ad inside the result card */
+.resultCard .adBanner {
+  width: 100%;
+  margin: 16px auto 0;
+  padding: 8px 10px 10px;
+}
+.resultCard .adBannerFrame iframe { min-height: 60px; }
+@media (max-height: 720px) {
+  .resultCard { padding-top: 28px; padding-bottom: 28px; }
+}
+
+/* Legal views keep ads clear of the text cards */
+.legalView .adBanner { margin-top: 8px; }
 @media (max-height: 640px) {
   .adBreak { gap: 12px; }
   .adBreak .adCreative { padding: 20px 20px 18px; }
@@ -896,6 +910,7 @@ button { color: inherit; }
   padding: 20px;
   display: grid;
   place-items: center;
+  overflow-y: auto;
   background: rgba(7, 6, 5, .78);
   backdrop-filter: blur(20px);
   animation: fadeIn .25s ease both;
