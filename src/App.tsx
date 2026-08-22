@@ -1554,7 +1554,7 @@ export default function Home() {
             </details>
           </section>
 
-          <AdBanner />
+          <AdBanner unitId="2452943" />
 
           <p className="homeFoot">
             For fun and craving relief only · not medical advice ·{" "}
@@ -1771,7 +1771,7 @@ export default function Home() {
             })}
           </div>
           <p className="unlockNote">Every pack is imaginary · the smugness is real</p>
-          <AdBanner />
+          <AdBanner unitId="2452944" />
         </div>
       )}
 

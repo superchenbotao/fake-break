@@ -9,7 +9,8 @@
  *      a. Buy a custom domain (GitHub Pages subdomains are rarely approved
  *         by ad networks — a $10 domain is the difference between "site"
  *         and "property").
- *      b. Display ads are LIVE via A-Ads (aads.com): ad unit 2452940 is
+ *      b. Display ads are LIVE via A-Ads (aads.com): ad units 2452943
+ *         (home) and 2452944 (packs) are
  *         embedded as an iframe in src/AdBanner.tsx and rendered on the home
  *         and packs views. A-Ads needs no approval, no cookies, no ads.txt;
  *         earnings accrue to the anonymous account (see AADS-ACCESS-CODE.txt)

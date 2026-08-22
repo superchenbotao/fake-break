@@ -1,24 +1,34 @@
 /**
- * A-Ads display ad unit (ID 2452940, adaptive size).
+ * A-Ads display ad units (aads.com, adaptive size).
  *
- * A-Ads (aads.com) is a privacy-friendly network: no cookies, no tracking,
- * no personal data collection — so no consent banner is required and the
- * privacy policy stays short. Earnings accrue to the anonymous account in
- * AADS-ACCESS-CODE.txt; set a BTC withdrawal address in the A-Ads dashboard.
+ * A-Ads is a privacy-friendly network: no cookies, no tracking, no personal
+ * data collection — so no consent banner is required and the privacy policy
+ * stays short. Earnings accrue to the owner's A-Ads account (user #514478)
+ * and pay out in BTC once a withdrawal address is set in the dashboard.
+ *
+ * Each placement gets its own unit ID so the dashboard shows per-slot stats:
+ *   2452943 — home view footer
+ *   2452944 — packs view footer
  *
  * The unit is a plain cross-origin iframe (A-Ads' official embed), so it
  * cannot touch our DOM, storage, or microphone. We render it only on the
  * browsing surfaces (home / packs) and never during the ritual itself.
  */
-export default function AdBanner({ label = "Sponsored" }: { label?: string }) {
+export default function AdBanner({
+  unitId,
+  label = "Sponsored",
+}: {
+  unitId: string;
+  label?: string;
+}) {
   return (
     <aside className="adBanner" aria-label="Advertisement">
       <span className="adBannerLabel">{label}</span>
       <div className="adBannerFrame">
-        {/* BEGIN AADS AD UNIT 2452940 */}
+        {/* BEGIN AADS AD UNIT {unitId} */}
         <iframe
-          data-aa="2452940"
-          src="//acceptable.a-ads.com/2452940/?size=Adaptive"
+          data-aa={unitId}
+          src={`//acceptable.a-ads.com/${unitId}/?size=Adaptive`}
           title="Advertisement"
           loading="lazy"
           style={{
@@ -34,7 +44,7 @@ export default function AdBanner({ label = "Sponsored" }: { label?: string }) {
             background: "transparent",
           }}
         />
-        {/* END AADS AD UNIT 2452940 */}
+        {/* END AADS AD UNIT {unitId} */}
       </div>
     </aside>
   );

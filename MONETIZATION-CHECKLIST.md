@@ -76,7 +76,7 @@
 
 - ✅【已完成】aads.com 匿名账户已创建（无需邮箱/Google 登录），
   访问码保存在 `AADS-ACCESS-CODE.txt`（**A-Ads 不存这个码，丢失无法找回，务必备份**）
-- ✅【已完成】广告位 2452940（自适应尺寸，站点 fakebreak.win）已创建，
+- ✅【已完成】广告位 2452943（首页）+ 2452944（烟盒页）已创建（自适应尺寸，站点 fakebreak.win，在你自己的账号 #514478 下），
   嵌入代码在 `src/AdBanner.tsx`，首页和烟盒页底部展示；A-Ads 不需要 ads.txt
 - 【你做】登录 aads.com（Log in → Use access code，粘贴访问码），
   在后台填你的 BTC 收款地址，收益满额即可提现

@@ -34,7 +34,8 @@ Two pack tiers turn usage into revenue, both owned by the site operator:
 
   1. Buy a custom domain — ad networks rarely approve `*.github.io`
      subdomains, and the domain is what makes the property yours.
-  2. Display ads are live via A-Ads (aads.com, ad unit 2452940) — embedded
+  2. Display ads are live via A-Ads (aads.com, units 2452943 home /
+     2452944 packs) — embedded
      as a cookie-free iframe in `src/AdBanner.tsx` on the home and packs
      views. No approval, no ads.txt; earnings pay out in BTC to the
      anonymous account in `AADS-ACCESS-CODE.txt` (set a withdrawal address

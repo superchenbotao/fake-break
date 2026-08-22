@@ -1,4 +1,4 @@
 # No ads.txt entries required.
-# Our display ads are served by A-Ads (aads.com, ad unit 2452940), which
+# Our display ads are served by A-Ads (aads.com, units 2452943/2452944), which
 # does not use the ads.txt system. This file is kept (comments only) so
 # requests to /ads.txt return 200 instead of a soft 404.
