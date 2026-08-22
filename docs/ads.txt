@@ -1,1 +1,4 @@
-google.com, pub-5803299374420176, DIRECT, f08c47fec0942fa0
+# Journey by Mediavine — replace this file's contents with the ads.txt
+# generated in your Journey dashboard (https://journeymv.com/ → Settings → ads.txt).
+# Mediavine updates it as demand partners change; re-copy whenever the
+# dashboard flags a newer version, otherwise ad demand silently drops.

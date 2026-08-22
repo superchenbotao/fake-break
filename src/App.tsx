@@ -1620,16 +1620,17 @@ export default function Home() {
           <section className="legalCard">
             <h2>Advertising</h2>
             <p>
-              Some packs unlock by watching a short sponsored break. We may serve ads
-              through third-party networks such as Google AdSense. These vendors may
-              use cookies or similar technologies to personalize ads based on your
-              visits to this and other sites. You can opt out of personalized ads at{" "}
-              <a href="https://adssettings.google.com/" target="_blank" rel="noreferrer">
-                Google Ads Settings ↗
+              Some packs unlock by watching a short sponsored break, and display ads on
+              this site are served through third-party networks such as Journey by
+              Mediavine. These vendors may use cookies or similar technologies to
+              personalize ads based on your visits to this and other sites. You can opt
+              out of personalized ads at{" "}
+              <a href="https://optout.aboutads.info/" target="_blank" rel="noreferrer">
+                aboutads.info ↗
               </a>{" "}
-              and learn how Google uses data at{" "}
-              <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noreferrer">
-                Google’s partner-sites policy ↗
+              and read Mediavine’s data practices at{" "}
+              <a href="https://www.mediavine.com/privacy-policy/" target="_blank" rel="noreferrer">
+                Mediavine’s privacy policy ↗
               </a>
               .
             </p>

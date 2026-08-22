@@ -9,10 +9,12 @@
  *      a. Buy a custom domain (GitHub Pages subdomains are rarely approved
  *         by ad networks — a $10 domain is the difference between "site"
  *         and "property").
- *      b. Apply for Google AdSense and enable the Ad Placement API
- *         (rewarded format), or any H5 rewarded-ads network that accepts
- *         your content category. Note: tobacco-adjacent content is reviewed
- *         strictly — frame the site as a quit-smoking companion (it is one).
+ *      b. Apply for Journey by Mediavine (journeymv.com — their tier for
+ *         smaller sites), paste the site-specific tag ID into index.html,
+ *         and replace ads.txt with the dashboard-generated one. Note:
+ *         tobacco-adjacent content is reviewed strictly — frame the site as
+ *         a quit-smoking companion (it is one). Journey serves DISPLAY ads;
+ *         the rewarded unlock below stays a simulated sponsored break.
  *      c. Paste your client/slot IDs below and flip provider to "network",
  *         then load the network SDK where AdBreak mounts (see App.tsx).
  *
@@ -36,7 +38,7 @@ export const AD_CONFIG = {
   /** "simulated" = built-in house creative; "network" = real ad SDK slot. */
   provider: "simulated" as "simulated" | "network",
   /** Fill these when provider is "network" (see header comment). */
-  networkClientId: "ca-pub-5803299374420176",
+  networkClientId: "", // Journey tag ID lives in index.html, not here
   networkSlotId: "",
   /** Rewarded ads must not be skippable — this is the watch duration. */
   adSeconds: 6,
