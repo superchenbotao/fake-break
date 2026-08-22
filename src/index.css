@@ -306,6 +306,28 @@ button { color: inherit; }
 }
 .homeFoot a { color: #8f8981; text-decoration: none; border-bottom: 1px dotted #8f8981; }
 
+/* ============ AD BANNER (A-Ads) ============ */
+
+.adBanner {
+  width: min(420px, 100%);
+  margin: 26px auto 4px;
+  padding: 10px 12px 12px;
+  border: 1px solid rgba(242, 238, 230, .07);
+  border-radius: 14px;
+  background: rgba(242, 238, 230, .025);
+}
+.adBannerLabel {
+  display: block;
+  margin-bottom: 8px;
+  color: #5d5851;
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.adBannerFrame { width: 100%; }
+.adBannerFrame iframe { border-radius: 8px; }
+
 /* ============ PACK PICKER ============ */
 
 .packsView {

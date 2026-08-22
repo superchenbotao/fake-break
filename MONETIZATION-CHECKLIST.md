@@ -72,18 +72,19 @@
 
 ## 阶段 4 · 申请广告平台【你做申请，我做接入】
 
-### 路线 A：Journey by Mediavine（已切换，广告质量高、按月打款）
+### 路线 A：A-Ads（✅ 已上线，零审核、无 Cookie、BTC 收款）
 
-1. 【你做】journeymv.com 注册并提交站点 fakebreak.win 审核（Journey 是 Mediavine
-   面向中小站长的门槛更低的档位）
-2. 【你做】审核通过后在 Journey 后台 Settings → Ad Setup 拿到站点专属 tag ID
-3. 【你做/我做】把 tag ID 填进 `index.html` 的 `YOUR-JOURNEY-SITE-ID`，
-   并用后台生成的 ads.txt 替换 `public/ads.txt`，重新部署
-4. 通过后广告自动按页面浏览量计费，无需手动放广告位
+- ✅【已完成】aads.com 匿名账户已创建（无需邮箱/Google 登录），
+  访问码保存在 `AADS-ACCESS-CODE.txt`（**A-Ads 不存这个码，丢失无法找回，务必备份**）
+- ✅【已完成】广告位 2452940（自适应尺寸，站点 fakebreak.win）已创建，
+  嵌入代码在 `src/AdBanner.tsx`，首页和烟盒页底部展示；A-Ads 不需要 ads.txt
+- 【你做】登录 aads.com（Log in → Use access code，粘贴访问码），
+  在后台填你的 BTC 收款地址，收益满额即可提现
+- 【你做】把 `AADS-ACCESS-CODE.txt` 离线备份一份（U盘/纸质）——
+  该文件已加入 .gitignore 不会进仓库，也不要发到任何公开渠道
 
-> ⚠️ 政策红线：Journey 展示广告**不允许**"看广告换解锁"这种激励观看模式。
-> 所以烟盒解锁插页里的广告位保持模拟/赞助内容样式，
-> 真实收入来自 Journey 的展示广告——两条线并行，互不违规。
+> ⚠️ 政策红线：A-Ads 是展示广告，同样**不允许**"看广告换解锁"。
+> 烟盒解锁插页保持模拟赞助内容，真实收入来自展示广告——两条线并行，互不违规。
 
 ### 路线 B：H5 游戏激励广告（真正的"看广告解锁"，有门槛）
 
@@ -123,6 +124,6 @@
 |---|---|---|
 | 域名+DNS 上线 | 半天～1 天 | DNS 生效等待 |
 | 隐私/About 页补齐 | 我半天 | 无 |
-| Journey 审核 | 数天～2 周 | 内容完整度 |
+| A-Ads 广告接入 | ✅ 已完成 | 无审核，即刻展示 |
 | Ko-fi/Stripe 收款 | 当天 | 无 |
 | 第一笔收入 | 路线 C 最快当天可行 | 流量 |

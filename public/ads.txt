@@ -1,4 +1,4 @@
-# Journey by Mediavine — replace this file's contents with the ads.txt
-# generated in your Journey dashboard (https://journeymv.com/ → Settings → ads.txt).
-# Mediavine updates it as demand partners change; re-copy whenever the
-# dashboard flags a newer version, otherwise ad demand silently drops.
+# No ads.txt entries required.
+# Our display ads are served by A-Ads (aads.com, ad unit 2452940), which
+# does not use the ads.txt system. This file is kept (comments only) so
+# requests to /ads.txt return 200 instead of a soft 404.

@@ -40,3 +40,7 @@ yarn-error.log*
 # local reference assets
 /.ref-images/
 .wb-*.json
+
+# secrets — A-Ads anonymous account access code (never commit)
+/AADS-ACCESS-CODE.txt
+/.shots/

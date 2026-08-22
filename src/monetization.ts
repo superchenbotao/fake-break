@@ -9,14 +9,16 @@
  *      a. Buy a custom domain (GitHub Pages subdomains are rarely approved
  *         by ad networks — a $10 domain is the difference between "site"
  *         and "property").
- *      b. Apply for Journey by Mediavine (journeymv.com — their tier for
- *         smaller sites), paste the site-specific tag ID into index.html,
- *         and replace ads.txt with the dashboard-generated one. Note:
- *         tobacco-adjacent content is reviewed strictly — frame the site as
- *         a quit-smoking companion (it is one). Journey serves DISPLAY ads;
- *         the rewarded unlock below stays a simulated sponsored break.
- *      c. Paste your client/slot IDs below and flip provider to "network",
- *         then load the network SDK where AdBreak mounts (see App.tsx).
+ *      b. Display ads are LIVE via A-Ads (aads.com): ad unit 2452940 is
+ *         embedded as an iframe in src/AdBanner.tsx and rendered on the home
+ *         and packs views. A-Ads needs no approval, no cookies, no ads.txt;
+ *         earnings accrue to the anonymous account (see AADS-ACCESS-CODE.txt)
+ *         and pay out in BTC once you set a withdrawal address in the
+ *         A-Ads dashboard. A-Ads serves DISPLAY ads only; the rewarded
+ *         unlock below stays a simulated sponsored break.
+ *      c. If you later add a rewarded-ad SDK, paste your client/slot IDs
+ *         below and flip provider to "network", then load the network SDK
+ *         where AdBreak mounts (see App.tsx).
  *
  *   2. Revenue pays out to YOUR ad-network account. This codebase never
  *      touches money, keys, or user data.
@@ -38,7 +40,7 @@ export const AD_CONFIG = {
   /** "simulated" = built-in house creative; "network" = real ad SDK slot. */
   provider: "simulated" as "simulated" | "network",
   /** Fill these when provider is "network" (see header comment). */
-  networkClientId: "", // Journey tag ID lives in index.html, not here
+  networkClientId: "", // A-Ads unit ID lives in src/AdBanner.tsx, not here
   networkSlotId: "",
   /** Rewarded ads must not be skippable — this is the watch duration. */
   adSeconds: 6,

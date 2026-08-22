@@ -34,12 +34,13 @@ Two pack tiers turn usage into revenue, both owned by the site operator:
 
   1. Buy a custom domain — ad networks rarely approve `*.github.io`
      subdomains, and the domain is what makes the property yours.
-  2. Apply for Journey by Mediavine (journeymv.com) — display ads. Paste the
-     site tag ID into `index.html` and swap in the dashboard-generated
-     ads.txt. Frame the site as a quit-smoking companion; tobacco-adjacent
-     content is reviewed strictly.
-  3. The rewarded unlock flow stays a simulated sponsored break (Journey
-     policy forbids ad-for-unlock incentives on display ads).
+  2. Display ads are live via A-Ads (aads.com, ad unit 2452940) — embedded
+     as a cookie-free iframe in `src/AdBanner.tsx` on the home and packs
+     views. No approval, no ads.txt; earnings pay out in BTC to the
+     anonymous account in `AADS-ACCESS-CODE.txt` (set a withdrawal address
+     in the A-Ads dashboard).
+  3. The rewarded unlock flow stays a simulated sponsored break (display
+     networks forbid ad-for-unlock incentives on display ads).
 
   Revenue pays out to your own ad-network account; this codebase never
   touches money, keys, or user data.

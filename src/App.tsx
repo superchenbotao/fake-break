@@ -9,6 +9,7 @@ import {
 } from "react";
 import { ASH_VISIBLE_THRESHOLD, getAttachedAshHeightPx, getBurnOffsetPx } from "./ashPhysics";
 import { AD_CONFIG, HOUSE_ADS, SUPPORT_CONFIG, type UnlockRule } from "./monetization";
+import AdBanner from "./AdBanner";
 import { flushSync } from "react-dom";
 
 type Pack = {
@@ -1553,6 +1554,8 @@ export default function Home() {
             </details>
           </section>
 
+          <AdBanner />
+
           <p className="homeFoot">
             For fun and craving relief only · not medical advice ·{" "}
             <a href="https://smokefree.gov/" target="_blank" rel="noreferrer">
@@ -1621,16 +1624,12 @@ export default function Home() {
             <h2>Advertising</h2>
             <p>
               Some packs unlock by watching a short sponsored break, and display ads on
-              this site are served through third-party networks such as Journey by
-              Mediavine. These vendors may use cookies or similar technologies to
-              personalize ads based on your visits to this and other sites. You can opt
-              out of personalized ads at{" "}
-              <a href="https://optout.aboutads.info/" target="_blank" rel="noreferrer">
-                aboutads.info ↗
-              </a>{" "}
-              and read Mediavine’s data practices at{" "}
-              <a href="https://www.mediavine.com/privacy-policy/" target="_blank" rel="noreferrer">
-                Mediavine’s privacy policy ↗
+              this site are served by A-Ads (aads.com). A-Ads is a privacy-friendly
+              network: it sets no cookies, builds no profiles, and collects no personal
+              data — ads are selected by page context, not by who you are. You can read
+              their data practices at{" "}
+              <a href="https://aads.com/privacy-policy/" target="_blank" rel="noreferrer">
+                A-Ads’ privacy policy ↗
               </a>
               .
             </p>
@@ -1772,6 +1771,7 @@ export default function Home() {
             })}
           </div>
           <p className="unlockNote">Every pack is imaginary · the smugness is real</p>
+          <AdBanner />
         </div>
       )}
 
