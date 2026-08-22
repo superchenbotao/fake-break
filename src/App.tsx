@@ -2271,7 +2271,7 @@ export default function Home() {
         );
       })()}
 
-      {/* ---- rewarded ad break (simulated creative until a network is connected) ---- */}
+      {/* ---- rewarded ad break (house creative + live A-Ads banner) ---- */}
       {adForId && (() => {
         const pack = PACKS.find((candidate) => candidate.id === adForId);
         const houseAd = HOUSE_ADS[(adProgress[adForId] ?? 0) % HOUSE_ADS.length];
@@ -2289,6 +2289,7 @@ export default function Home() {
               <p>{houseAd.tagline}</p>
               <span className="adCta">{houseAd.cta}</span>
             </div>
+            <AdBanner unitId="2452945" />
             <div className="adProgress">
               <i style={{ width: `${((AD_CONFIG.adSeconds - adLeft) / AD_CONFIG.adSeconds) * 100}%` }} />
             </div>

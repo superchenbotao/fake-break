@@ -9,6 +9,7 @@
  * Each placement gets its own unit ID so the dashboard shows per-slot stats:
  *   2452943 — home view footer
  *   2452944 — packs view footer
+ *   2452945 — rewarded ad-break overlay (below the house creative)
  *
  * The unit is a plain cross-origin iframe (A-Ads' official embed), so it
  * cannot touch our DOM, storage, or microphone. We render it only on the

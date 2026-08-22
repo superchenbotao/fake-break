@@ -328,6 +328,22 @@ button { color: inherit; }
 .adBannerFrame { width: 100%; }
 .adBannerFrame iframe { border-radius: 8px; }
 
+/* Compact variant inside the rewarded ad break overlay */
+.adBreak { overflow-y: auto; }
+.adBreak .adBanner {
+  width: min(340px, 88%);
+  margin: 0 auto;
+  padding: 8px 10px 10px;
+  flex-shrink: 0;
+}
+.adBreak .adBannerLabel { margin-bottom: 6px; }
+.adBreak .adBannerFrame iframe { min-height: 60px; }
+@media (max-height: 640px) {
+  .adBreak { gap: 12px; }
+  .adBreak .adCreative { padding: 20px 20px 18px; }
+  .adBreak .adBrandMark { width: 40px; height: 40px; margin-bottom: 10px; }
+}
+
 /* ============ PACK PICKER ============ */
 
 .packsView {
